@@ -20,7 +20,7 @@ public:
     
     // Number of sides associated with 1D elements
     const static int nSides = 3;
-    
+
     // Number of corner nodes associated with 1D elements
     const static int nCorners = 2;
     
