@@ -8,7 +8,7 @@
 #include "tpanic.h"
 
 GeoElementSide::GeoElementSide() {
-    DebugStop();
+    //DebugStop();
 }
 
 GeoElementSide::GeoElementSide(const GeoElementSide &copy) {

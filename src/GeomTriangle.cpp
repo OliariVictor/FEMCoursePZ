@@ -7,54 +7,67 @@
 #include "GeomTriangle.h"
 #include "tpanic.h"
 
-GeomTriangle::GeomTriangle() {
-    DebugStop();
+GeomTriangle::GeomTriangle(): fNodeIndices({0,1,2}),fNeighbours()  {
 }
 
 GeomTriangle::~GeomTriangle() {
 }
 
-GeomTriangle::GeomTriangle(const GeomTriangle &copy) {
-    DebugStop();
-
+GeomTriangle::GeomTriangle(const GeomTriangle &copy): fNodeIndices(copy.fNodeIndices) {
+    for(int i = 0; i <nSides; i++) fNeighbours[i] = copy.fNeighbours[i];
 }
 
 GeomTriangle& GeomTriangle::operator=(const GeomTriangle& copy) {
-    DebugStop();
+    fNodeIndices = copy.fNodeIndices;
+    for(int i = 0; i <nSides; i++) fNeighbours[i] = copy.fNeighbours[i];
+    return *this;
 }
 
 void GeomTriangle::Shape(const VecDouble& xi, VecDouble& phi, Matrix& dphi) {
-    DebugStop();
+    phi[0] = 1 - xi[0] - xi[1]; dphi(0,0) = -xi[1]; dphi(0,1) = -xi[0];
+    phi[1] = xi[0]; dphi(1,0) = 1; dphi(1,1) = 0;
+    phi[2] = xi[1]; dphi(2,0) = 0; dphi(2,1) = 1;
 }
 
 void GeomTriangle::X(const VecDouble &xi, Matrix &NodeCo, VecDouble &x) {
-    DebugStop();
+    VecDouble fphi(3,0); Matrix fdphi(3,2,0);
+    Shape(xi,fphi,fdphi); x[0] = 0; x[1] = 0;
+    for(int i = 0 ; i<3 ; i++){
+        x[0] += NodeCo(i,0)*fphi[i];
+        x[1] += NodeCo(i,1)*fphi[i];
+    }
 }
 
 void GeomTriangle::GradX(const VecDouble &xi, Matrix &NodeCo, VecDouble &x, Matrix &gradx) {
-    DebugStop();
+    VecDouble fphi(3,0); Matrix fdphi(3,2,0);
+    Shape(xi,fphi,fdphi);
+    gradx(0,0) = gradx(0,1) = gradx(1,0) =gradx(1,1) = 0;
+    for(int i = 0; i < 2; i++) for(int j =0 ; j < 3;j++) {
+            gradx(0,i) += NodeCo(j,0)*fdphi(j,i);
+            gradx(1,i) += NodeCo(j,1)*fdphi(j,i);
+    }
 }
 
 void GeomTriangle::SetNodes(const VecInt &nodes) {
-    DebugStop();
+    fNodeIndices = nodes;
 }
 
 void GeomTriangle::GetNodes(VecInt &nodes) {
-    DebugStop();
+    nodes = fNodeIndices;
 }
 
 int GeomTriangle::NodeIndex(int node) {
-    DebugStop();
+    return(fNodeIndices[node]);
 }
 
 int GeomTriangle::NumNodes() {
-    DebugStop();
+    return(3);
 }
 
 GeoElementSide GeomTriangle::Neighbour(int side) {
-    DebugStop();
+    return(fNeighbours[side]);
 }
 
 void GeomTriangle::SetNeighbour(int side, const GeoElementSide &neighbour) {
-    DebugStop();
+    fNeighbours[side] = neighbour;
 }
