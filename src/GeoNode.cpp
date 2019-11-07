@@ -8,5 +8,8 @@
 #include "tpanic.h"
 
 void GeoNode::Print(std::ostream &out) {
-    DebugStop();
+    int j = xco.size();
+    out << "Node coordinate:\t";
+    for (int i = 0; i < j; i++ ) std::cout  << xco[i] <<"\t";
+    out << std::endl;
 }

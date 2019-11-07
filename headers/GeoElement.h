@@ -11,6 +11,7 @@
 #include "DataTypes.h"
 #include "CompElement.h"
 
+
 class CompMesh;
 
 class GeoElementSide;
@@ -35,7 +36,7 @@ protected:
     
 public:
 
-    // Default Constructor of GeoElement
+    // Default Constructor of GeoElementReference = (,,this)
     GeoElement();
     
     // Constructor of GeoElement

@@ -11,7 +11,14 @@
 #include <GeomTriangle.h>
 #include <GeomTetrahedron.h>
 #include "DataTypes.h"
-//#include "IntRule1d.h"
+#include "Shape1d.h"
+#include "IntRule1d.h"
+#include "ShapeQuad.h"
+#include "ShapeTriangle.h"
+#include "ShapeTetrahedron.h"
+#include "GeoNode.h"
+#include "GeoMesh.h"
+#include "GeoElementTemplate.h"
 
 using std::cout;
 using std::endl;
@@ -29,7 +36,13 @@ int main ()
 
     //testing TopologyQuad.h
     /*std::cout << "{,";
-    for(int i =0 ; i < TopologyQuad::nSides; ++i ) {
+    for(int i =0 ; i < TopologyQuad::nSides Shape1d teste;
+    VecDouble coord = {0.0}, fphi(3,0); VecInt forders = {1,1,2};
+    Matrix fdphi(1,3,0);
+    teste.Shape(coord,forders,fphi,fdphi);
+    cout << fphi[0] << "\t" << fphi[1] << "\t" << fphi.size() << endl;
+    fdphi.Print();
+    cout << teste.NShapeFunctions(forders);; ++i ) {
         std::cout <<" "<< TopologyQuad::NSideut << x[0] << std::endl;Nodes(i) << ",";
     };
     std::cout << "}\n";
@@ -49,7 +62,13 @@ int main ()
 
 Process finished with exit code 0< node;*/
 
-    //Testing IntRule::Constructors
+    //Testing IntRule::Constructors Shape1d teste;
+    /*VecDouble coord = {0.0}, fphi(3,0); VecInt forders = {1,1,2};
+    Matrix fdphi(1,3,0);
+    teste.Shape(coord,forders,fphi,fdphi);
+    cout << fphi[0] << "\t" << fphi[1] << "\t" << fphi.size() << endl;
+    fdphi.Print();
+    cout << teste.NShapeFunctions(forders);*/
     /*IntRule emptyConstructor;
     IntRule singularConstructor(30);
     IntRule copiedConstructor(singularConstructor);
@@ -59,7 +78,7 @@ Process finished with exit code 0< node;*/
     //Testing IntRule::NPoints
     std::cout << emptyConstructor.NPoints()<< std::endl << singularConstructor.NPoints() << std::endl << copiedConstructor.NPoints() << std::endl << assinedConstructor.NPoints() << std::endl;
 
-    //Testing IntRule::GetOrder()
+    //Testing IntRuleinclude "tpanic.h"::GetOrder()
     std::cout << emptyConstructor.GetOrder()<< std::endl << singularConstructor.GetOrder() << std::endl << copiedConstructor.GetOrder() << std::endl << assinedConstructor.GetOrder() << std::endl;
 IntRule emptyConstructor;
     IntRule singularConstructor(30);
@@ -97,7 +116,7 @@ IntRule emptyConstructor;
     //Testing InRuleQuadr
     /*IntRuleQuad emptyConstructorQuad;
     IntRuleQuad singularConstructorQuad(4);
-    emptyConstructorQuad.SetOrder(15);
+    emptyConstructorQuad.SetOrder(15)=;
 
     emptyConstructorQuad.Print(std::cout);*/
 
@@ -152,7 +171,7 @@ IntRule emptyConstructor;
     cout << grad(1,0) << "\t" << grad(1,1) << endl;
     tri.SetNodes({4,5,6});VecInt no;tri.GetNodes(no); cout <<no[2];*/
 
-    GeomTetrahedron tetra;
+    /*GeomTetrahedron tetra;
     VecDouble coord = {0.2,0.5,0.2}, pos = {0,0,0};
     Matrix nodes(4,3,0), grad(3,3,0), fdphi(4,3,0); VecDouble fphi(4,0);
     nodes(1,0) = nodes(2,1) = nodes(3,2) =  15; nodes(0,0) = nodes(0,1) = nodes(0,2) = -1; nodes(0,2) = -3;
@@ -163,5 +182,76 @@ IntRule emptyConstructor;
     cout << grad(0,0) << "\t" << grad(0,1) << "\t" << grad(0,2) << endl;
     cout << grad(1,0) << "\t" << grad(1,1) << "\t" << grad(1,2) << endl;
     cout << grad(2,0) << "\t" << grad(2,1) << "\t" << grad(2,2) << endl;
-    tetra.SetNodes({4,5,6,7});VecInt no;tetra.GetNodes(no); cout <<no[3];
+    tetra.SetNodes({4,5,6,7});VecInt no;tetra.GetNodes(no); cout <<no[3];*/
+
+    /*Shape1d teste;
+    VecDouble coord = {0.0}, fphi(3,0); VecInt forders = {1,1,2};
+    Matrix fdphi(1,3,0);
+    teste.Shape(coord,forders,fphi,fdphi);
+    cout << fphi[0] << "\t" << fphi[1] << "\t" << fphi.size() << endl;
+    fdphi.Print();
+    cout << teste.NShapeFunctions(forders);*/
+
+    /*ShapeQuad teste;
+    VecDouble coord = {0.4,0.6}, fphi(teste.nSides,0); VecInt forders = {1,1,1,1,1,1,1,2,2};
+    Matrix fdphi(teste.nSides,2,0);
+    teste.Shape(coord,forders,fphi,fdphi);
+    for (int i= 0 ; i < fphi.size();i++) cout << fphi[i] << "\t";cout << endl;
+    fdphi.Print();
+    //cout << teste.NShapeFunctions(forders);*/
+
+    /*ShapeTriangle teste;
+    VecDouble coord = {0.4,0.7}, fphi(teste.nSides,0); VecInt forders = {1,1,1,2,2,2,2};
+    Matrix fdphi(teste.nSides,2,0);
+    teste.Shape(coord,forders,fphi,fdphi);
+    for (int i= 0 ; i < fphi.size();i++) cout << fphi[i] << "\t";cout << endl;
+    fdphi.Print();*/
+
+    /*ShapeTetrahedron teste;
+    VecDouble coord = {0.4,0.7,0.2}, fphi(teste.nSides,0); VecInt forders = {1,1,1,1,2,2,2,2,2,2,2,2,2,2,2};
+    Matrix fdphi(teste.nSides,3,0);
+    teste.Shape(coord,forders,fphi,fdphi);
+    for (int i= 0 ; i < fphi.size();i++) cout << fphi[i] << "\t";cout << endl;
+    fdphi.Print();*/
+
+
+    //Setting Geomesh;
+    GeoMesh mesh;
+    mesh.SetNumNodes(9);
+    mesh.SetNumElements(4);
+    mesh.SetDimension(2);
+
+    //Defining node coordinates
+    double index = 0;
+    for(int i =0; i <mesh.NumNodes(); i +=3) {index = double(i/3); mesh.Node(i).SetCo({0,index*5});}
+    for(int i =1; i <mesh.NumNodes(); i +=3) {index = double(i/3); mesh.Node(i).SetCo({index+5,index*5});}
+    for(int i =2; i <mesh.NumNodes(); i +=3) {index = double(i/3); mesh.Node(i).SetCo({index+10,index*5});}
+
+    VecInt oneIndices = {0,1,4,5},
+           twoIndices = {1,2,3,4},
+           threeIndices = {4,3,8,7},
+           fourIndices = {5,4,7,6};
+
+    GeoElementTemplate<GeomQuad> one(oneIndices,0,&mesh,0),
+                                 two(twoIndices,1,&mesh,1),
+                                 three(threeIndices,2,&mesh,2),
+                                 four(fourIndices,3,&mesh,3);
+
+    //GeoElementSide El(&one,5);
+    //std::vector<GeoElementSide> neigh;
+    //mesh.Print(std::cout);
+    //GeoElement *Ele;
+    //for(int i; i <neigh.size() ; i++) {Ele = neigh[i].Element() ; Ele ->Print(std::cout);}
+
+
+    mesh.BuildConnectivity();
+
+    mesh.Print(std::cout);
+
+
+
 }
+
+
+
+

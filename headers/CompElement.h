@@ -82,13 +82,13 @@ public:
     
     // Set the geometric element associated
     void SetGeoElement(GeoElement *element);
-    
+
     // Return a pointer to the element computational mesh
     CompMesh *GetCompMesh() const;
     
     // Set a pointer to the element computational mesh
     void SetCompMesh(CompMesh *mesh);
-    
+
     // Initialize integration points data object
     void InitializeIntPointData(IntPointData &data) const;
     
@@ -104,7 +104,7 @@ public:
     // Compute error and exact solution
     virtual void EvaluateError(std::function<void(const VecDouble &loc,VecDouble &val,Matrix &deriv)> fp,
                                VecDouble &errors) const;
-    
+
     // Compute shape functions set at point x
     virtual void ShapeFunctions(const VecDouble &intpoint, VecDouble &phi, Matrix &dphi) const = 0;
     
@@ -135,12 +135,9 @@ public:
     
     // Use the Shape template class to compute the number of shape functions
     virtual int ComputeNShapeFunctions(int doflocindex, int order) = 0;
-    
     // Return the dimension of the element
     virtual int Dimension() const = 0;
-    
     // Method to print computational element information
     virtual void Print(std::ostream &out) = 0;
-    
 };
 #endif /* CompElement_h */

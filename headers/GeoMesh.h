@@ -15,8 +15,8 @@
 
 class GeoMesh
 {
-    
-    
+
+
     // Vector of nodes
     std::vector<GeoNode> Nodes;
     
@@ -57,7 +57,6 @@ public:
     
     // Set computational element pointer
     void SetElement(int elindex, GeoElement *gel);
-    
     // Set Dimension
     void SetDimension(int dim){fDim = dim;}
     
@@ -81,6 +80,6 @@ public:
     
     // Function to print results
     void Print(std::ostream &out);
-    
+
 };
 #endif /* GeoMesh_h */

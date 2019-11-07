@@ -42,6 +42,7 @@ void Geom1d::GradX(const VecDouble &xi, Matrix &NodeCo, VecDouble &x, Matrix &gr
 }
 
 void Geom1d::SetNodes(const VecInt &nodes) {
+    fNodeIndices.resize(NumNodes());
     for(auto i:fNodeIndices) fNodeIndices[i] = nodes[i];
 }
 

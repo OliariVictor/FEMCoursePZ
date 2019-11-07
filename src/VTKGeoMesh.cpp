@@ -358,7 +358,8 @@ void VTKGeoMesh::PrintSolVTK(CompMesh *cmesh, PostProcess &defPostProc, const st
         
         Size += (1+elNnodes);
         connectivity << elNnodes;
-        int dim = cel->Dimension();
+        //int dim = cel->Dimension();
+        int dim = 0;
         
         for(int t = 0; t < elNnodes; t++)
         {
