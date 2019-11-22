@@ -35,7 +35,7 @@ void GeoElementSide::SetNeighbour(const GeoElementSide &neighbour) {
 }
 
 bool GeoElementSide::IsNeighbour(const GeoElementSide &candidate) {
-    if (Exists() || candidate.Exists()) {std::cout << "GeoElementSide::IsNeighbour: Inconsistent mesh\n"; return false;}
+    if (!Exists() || !candidate.Exists()) {std::cout << "GeoElementSide::IsNeighbour: Inconsistent mesh\n"; return false;}
     if (candidate == *this) return true;
     GeoElementSide neighbour = Neighbour();
     if (neighbour.Exists()) return false;

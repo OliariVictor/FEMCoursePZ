@@ -50,18 +50,18 @@ public:
         int nstate = coefs.size()/phi.size();
         solution.resize(nstate);
         for(auto &solval:solution) solval = 0.;
-        dsoldksi.Resize(dphidx.Rows(), nstate);
-        dsoldx.Resize(dphidx.Rows(), nstate);
+        dsoldksi.Resize(dphidx.Cols(), nstate); // Rows replaced by Cols
+        dsoldx.Resize(dphidx.Cols(), nstate);   // Rows replaced by Cols
         dsoldx.Zero();
         dsoldksi.Zero();
-        int dim = dphidx.Rows();
+        int dim = dphidx.Cols();                      // Rows replaced by Cols
         for (int iphi=0; iphi<phi.size(); iphi++) {
             double phival = phi[iphi];
             for (int istate=0; istate<nstate; istate++) {
                 solution[istate] += phival*coefs[iphi*nstate+istate];
                 for (int d=0; d < dim; d++) {
-                    dsoldksi(d,istate) += coefs[iphi*nstate+istate]*dphidksi(d,iphi);
-                    dsoldx(d,istate) += coefs[iphi*nstate+istate]*dphidx(d,iphi);
+                    dsoldksi(d,istate) += coefs[iphi*nstate+istate]*dphidksi(iphi,d); // (d,iphi) replaced by (iphi,d)
+                    dsoldx(d,istate) += coefs[iphi*nstate+istate]*dphidx(iphi,d);     // (d,iphi) replaced by (iphi,d)
                 }
             }
         }

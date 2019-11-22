@@ -59,7 +59,7 @@ public:
     // Return the material object associated with the element
     MathStatement *GetStatement() const;
     
-    // Set the material object associated with the element
+    // Set the material objectdouble weight; associated with the element
     void SetStatement( MathStatement *statement);
     
     // Return integration rule established
@@ -79,7 +79,6 @@ public:
     
     // Return the geometric element associated
     GeoElement *GetGeoElement() const;
-    
     // Set the geometric element associated
     void SetGeoElement(GeoElement *element);
 

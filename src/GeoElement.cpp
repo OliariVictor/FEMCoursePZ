@@ -4,11 +4,18 @@
  * and open the template in the editor.
  */
 
-#include <GeoElementSide.h>
+#include "GeoElementSide.h"
 #include "GeoElement.h"
 #include "tpanic.h"
 #include "GeoElementTemplate.h"
 #include "GeoMesh.h"
+#include "CompElementTemplate.h"
+#include "CompElement.h"
+#include "CompMesh.h"
+#include "Shape1d.h"
+#include "ShapeQuad.h"
+#include "ShapeTriangle.h"
+#include "ShapeTetrahedron.h"
 
 GeoElement::GeoElement() : MaterialId(-1), Index(-1) { GMesh = 0; Reference = 0;
 }
@@ -32,10 +39,27 @@ GeoElement::~GeoElement() {
 }
 
 CompElement *GeoElement::CreateCompEl(CompMesh *mesh, int64_t index) {
-    CompElement prov(index,mesh,this);
-    *Reference = prov;
-
-//    *Reference = new CompElement(index,mesh,this);
+    CompElement *cel;
+    switch(Type()) {
+        case EOned:
+            cel = new CompElementTemplate<Shape1d>(index,mesh,this);
+            Reference = cel;
+            return cel;
+        case ETriangle:
+            cel = new CompElementTemplate<ShapeTriangle>(index,mesh,this);
+            Reference = cel;
+            return cel;
+        case ETetraedro:
+            cel = new CompElementTemplate<ShapeTetrahedron>(index,mesh,this);
+            Reference = cel;
+            return cel;
+        case EQuadrilateral:
+            cel = new CompElementTemplate<ShapeQuad>(index,mesh,this);
+            Reference = cel;
+            return cel;
+        default:
+            std::cout<< "CompMesh::AutoBuild(): Invalid Type()\n";DebugStop();
+    }
 }
 
 void GeoElement::Print(std::ostream &out) {

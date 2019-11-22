@@ -19,11 +19,36 @@
 #include "GeoNode.h"
 #include "GeoMesh.h"
 #include "GeoElementTemplate.h"
+#include "CompElementTemplate.h"
+#include "CompElement.h"
+#include "CompMesh.h"
+#include "VTKGeoMesh.h"
+#include "MathStatement.h"
+#include "Poisson.h"
+#include "L2Projection.h"
+#include "PostProcessTemplate.h"
+#include "PostProcess.h"
+#include "DOF.h"
 
 using std::cout;
 using std::endl;
 using std::cin;
 using namespace std;
+
+void force2D(const VecDouble &co, VecDouble &result){
+    result.resize(0); // nstate = 1
+    if (co.size() != 2) {std::cout << "force2D: coordinate must have two dimensions"; DebugStop()};
+    result[0] = sin(co[0])+cos(co[1]);
+}
+
+void lapace2D(const VecDouble &co, VecDouble &result, Matrix &deriv){
+    result.resize(0); // nstate = 1
+    Matrix.Resize(2,0);
+    if (co.size() != 2) {std::cout << "force2D: coordinate must have two dimensions"; DebugStop()};
+    result[0] = sin(co[0])+cos(co[1]);
+    deriv(0,0) = cos(co[0]);
+    deriv(1,0) = sin(co[1]);
+}
 
 int main ()
 {
@@ -227,26 +252,67 @@ IntRule emptyConstructor;
     for(int i =1; i <mesh.NumNodes(); i +=3) {index = double(i/3); mesh.Node(i).SetCo({index+5,index*5});}
     for(int i =2; i <mesh.NumNodes(); i +=3) {index = double(i/3); mesh.Node(i).SetCo({index+10,index*5});}
 
-    VecInt oneIndices = {0,1,4,5},
-           twoIndices = {1,2,3,4},
-           threeIndices = {4,3,8,7},
-           fourIndices = {5,4,7,6};
+    VecInt oneIndices = {0,1,4,3},
+           twoIndices = {1,2,5,4},
+           threeIndices = {4,5,8,7},
+           fourIndices = {3,4,7,6};
 
     GeoElementTemplate<GeomQuad> one(oneIndices,0,&mesh,0),
                                  two(twoIndices,1,&mesh,1),
                                  three(threeIndices,2,&mesh,2),
                                  four(fourIndices,3,&mesh,3);
-
-    //GeoElementSide El(&one,5);
-    //std::vector<GeoElementSide> neigh;
-    //mesh.Print(std::cout);
-    //GeoElement *Ele;
-    //for(int i; i <neigh.size() ; i++) {Ele = neigh[i].Element() ; Ele ->Print(std::cout);}
-
-
     mesh.BuildConnectivity();
 
     mesh.Print(std::cout);
+
+    Poisson math;
+    CompMesh cmesh(&mesh);
+    int numElem = cmesh.GetElementVec().size();
+    for(int elemInd = 0; elemInd < numElem; elemInd++) {
+        GeoElement *gel = mesh.Element(elemInd);
+        int nSides = gel->NSides();
+        for(int sideInd = 0; sideInd < nSides ; sideInd++){
+            GeoElementSide *gelSide = new GeoElementSide(gel,sideInd);
+            gel->
+    }
+    vector<DOF> dofVec1;
+
+
+
+    cmesh.AutoBuild(); //Create the necessary CompElements && set firstEquation values.
+
+
+
+    };
+    //std::function<void(const VecDouble &co, VecDouble &result)> forceFunction;
+
+    //std::function<void(const VecDouble &loc, VecDouble &result, Matrix &deriv)> SolutionExact;
+
+
+    //VTKGeoMesh::PrintGMeshVTK(&mesh,"FirstVTK_1.vtk");
+    //Computational Mesh
+
+    /*CompMesh cmesh(&mesh);
+
+    CompElementTemplate<ShapeQuad> cone(0,&cmesh, &one),
+                                   ctwo(0,&cmesh, &two),
+                                   cthree(0,&cmesh, &three),
+                                   cfour(0,&cmesh, &four);
+
+    vector<DOF> dofs;
+
+
+
+    cmesh.SetMathVec()
+    cmesh.SetDOFVec()
+    //
+    //
+    //
+    //
+    //
+    // cmesh.AutoBuild();
+    //cmesh.Print(std::cout);*/
+
 
 
 

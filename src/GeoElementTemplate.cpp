@@ -48,7 +48,7 @@ void GeoElementTemplate<TGeom>::X(const VecDouble &xi, VecDouble &x) {
     GeoNode node;
 
     for(int i = 0; i < ind.size() ; i++ ){
-        node = mesh->Node(i);
+        node = mesh->Node(ind[i]);
         for(int j =0; j <dim; j++) {
             nodeCoord(i,j) = node.Coord(j);
         }

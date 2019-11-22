@@ -181,6 +181,14 @@ void VTKGeoMesh::PrintGMeshVTK(GeoMesh * gmesh, const std::string &filename)
         }
        
         TMatrix ParamCo = NodeCoordinates(gel->Type());
+        /*int dim=-1;
+        switch(gel->Type()){
+            case EOned: dim =1;break;
+            case EQuadrilateral:
+            case ETriangle: dim = 2; break;
+            case ETetraedro: dim =3; break;
+            default: DebugStop();
+        }*/
         int elNnodes = ParamCo.Rows();
         
         Size += (1+elNnodes);

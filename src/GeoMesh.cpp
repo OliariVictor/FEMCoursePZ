@@ -7,6 +7,7 @@
 #include "GeoMesh.h"
 #include "tpanic.h"
 #include "GeoElementSide.h"
+#include "GeoElement.h"
 #include "GeoNode.h"
 
 GeoMesh::GeoMesh(): Nodes(0),Elements(0), Reference(0), fDim(0) {

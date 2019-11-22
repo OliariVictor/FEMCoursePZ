@@ -32,7 +32,7 @@ void GeomQuad::Shape(const VecDouble &xi, VecDouble &phi, Matrix &dphi) {
 
 void GeomQuad::X(const VecDouble &xi, Matrix &NodeCo, VecDouble &x) {
     VecDouble fphi(4,0); Matrix fdphi(4,2,0);
-    Shape(xi,fphi,fdphi); x[0] = 0;x[1] = 0;
+    Shape(xi,fphi,fdphi); x[0] = 0;x[1] = 0; NodeCo.Print(std::cout);
     for(int i = 0 ; i<4 ; i++){
         x[0] += NodeCo(i,0)*fphi[i];
         x[1] += NodeCo(i,1)*fphi[i];

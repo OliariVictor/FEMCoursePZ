@@ -63,7 +63,7 @@ public:
     void SetProjectionMatrix(const Matrix &proj);
 
     // Return Val1
-    Matrix Val1() const
+    Matrix Val1() const    //I modified this method: Inconsistent arguments;
     {
         return BCVal1;
     }

@@ -7,45 +7,55 @@
 #include "DOF.h"
 #include "tpanic.h"
 
-DOF::DOF() {
-    DebugStop();
+DOF::DOF() { //Initialized at DOF.h
 }
 
 DOF::DOF(const DOF &copy) {
-    DebugStop();
+    firstequation = copy.firstequation;
+    nshape = copy.nshape;
+    nstate = copy.nstate;
+    order = copy.order;
 }
 
 DOF &DOF::operator=(const DOF &copy) {
-    DebugStop();
+    firstequation = copy.firstequation;
+    nshape = copy.nshape;
+    nstate = copy.nstate;
+    order = copy.order;
+    return *this;
 }
 
 DOF::~DOF() {
 }
 
 int64_t DOF::GetFirstEquation() {
-    DebugStop();
+    return(firstequation);
 }
 
 void DOF::SetFirstEquation(int64_t first) {
-    DebugStop();
+    firstequation = first;
 }
 
 void DOF::SetNShapeStateOrder(int NShape, int NState, int Order) {
-    DebugStop();
+    nshape = NShape;
+    nstate = NState;
+    order = Order;
 }
 
 int DOF::GetNShape() const {
-    DebugStop();
+    return(nshape);
 }
 
 int DOF::GetNState() const {
-    DebugStop();
+    return(nstate);
 }
 
 int DOF::GetOrder() const {
-    DebugStop();
+    return(order);
 }
 
 void DOF::Print(const CompMesh &mesh, std::ostream & out) {
-    DebugStop();
+    out << "---------DOT---------";
+    out << "Order :" << GetOrder() << "\nnshape: " << GetNShape() << "\nnstate: " << GetNState() << "\n";
 }
+

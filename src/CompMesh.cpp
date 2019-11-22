@@ -4,112 +4,165 @@
  * and open the template in the editor.
  */
 
+#include "GeoElement.h"
+#include "CompElementTemplate.h"
 #include "CompMesh.h"
+#include "GeoMesh.h"
 #include "tpanic.h"
+#include "MathStatement.h"
+#include "ShapeTetrahedron.h"
+#include "ShapeTriangle.h"
+#include "ShapeQuad.h"
+#include "Shape1d.h"
+#include "DOF.h"
 
 CompMesh::CompMesh() {
-    DebugStop();
+    geomesh = 0;
+
 }
 
-CompMesh::CompMesh(const CompMesh &copy) {
-    DebugStop();
+CompMesh::CompMesh(const CompMesh &copy): geomesh(), compelements(), dofs(), mathstatements(), solution(0,0) {
 }
 
-CompMesh::CompMesh(GeoMesh *gmesh) {
-    DebugStop();
+CompMesh::CompMesh(GeoMesh *gmesh): geomesh(gmesh), compelements(), dofs(), mathstatements(), solution(0,0) {
 }
 
 CompMesh::~CompMesh() {
 }
 
 GeoMesh *CompMesh::GetGeoMesh() const {
-    DebugStop();
+    return(geomesh);
 }
 
 void CompMesh::SetGeoMesh(GeoMesh *gmesh) {
-    DebugStop();
+    geomesh = gmesh;
 }
 
 void CompMesh::SetNumberElement(int64_t nelem) {
-    DebugStop();
+    compelements.resize(nelem);
 }
 
 void CompMesh::SetNumberDOF(int64_t ndof) {
-    DebugStop();
+    dofs.resize(ndof);
 }
 
 void CompMesh::SetNumberMath(int nmath) {
-    DebugStop();
+    mathstatements.resize(nmath);
 }
 
 void CompMesh::SetElement(int64_t elindex, CompElement *cel) {
-    DebugStop();
+    compelements[elindex] = cel;
 }
 
 void CompMesh::SetDOF(int64_t index, const DOF &dof) {
-    DebugStop();
+    dofs[index] = dof;
 }
 
 void CompMesh::SetMathStatement(int index, MathStatement *math) {
-    DebugStop();
+    mathstatements[index] = math;
 }
 
 DOF &CompMesh::GetDOF(int64_t dofindex) {
-    DebugStop();
+    return(dofs[dofindex]);
 }
 
 CompElement *CompMesh::GetElement(int64_t elindex) const {
-    DebugStop();
+    return(compelements[elindex]);
 }
 
 MathStatement *CompMesh::GetMath(int matindex) const {
-    DebugStop();
+    return(mathstatements[matindex]);
 }
 
 std::vector<CompElement *> CompMesh::GetElementVec() const {
-    DebugStop();
+    return(compelements);
 }
 
 std::vector<DOF> CompMesh::GetDOFVec() const {
-    DebugStop();
+    return(dofs);
 }
 
 std::vector<MathStatement *> CompMesh::GetMathVec() const {
-    DebugStop();
+    return(mathstatements);
 }
 
 void CompMesh::SetElementVec(const std::vector<CompElement *> &vec) {
-    DebugStop();
+    compelements = vec;
 }
 
 void CompMesh::SetDOFVec(const std::vector<DOF> &dofvec) {
-    DebugStop();
+    dofs = dofvec;
 }
 
 void CompMesh::SetMathVec(const std::vector<MathStatement *> &mathvec) {
-    DebugStop();
+    mathstatements = mathvec;
 }
 
 void CompMesh::AutoBuild() {
-    DebugStop();
+    int numElem = GetGeoMesh()->NumElements();
+    SetNumberElement(numElem);
+    for(int i =0; i<numElem; i++){
+        GeoElement *geo = GetGeoMesh()->Element(i);
+        CompElement *cel = geo->CreateCompEl(this,i);
+        SetElement(i,cel);
+    }
+    Resequence();
 }
-
+//Initialize first equation of DOFs;
 void CompMesh::Resequence() {
-    DebugStop();
+    int64_t nDof = GetNumberDOF();
+    int64_t firstEq = 0;
+    int dofSize;
+    for(int iDof = 0; iDof < nDof; iDof++){
+        GetDOF(iDof).SetFirstEquation(firstEq);
+        dofSize = GetDOF(iDof).GetNShape()*GetDOF(iDof).GetNState();
+        firstEq += dofSize;
+    }
 }
-
+// Initialize the datastructure FirstEquation of the DOF objects in the order specified by the vector
 void CompMesh::Resequence(VecInt &DOFindices) {
-    DebugStop();
+    int64_t nDof = GetNumberDOF();
+    for (int iDof = 0; iDof < nDof; iDof++) {
+        GetDOF(iDof).SetFirstEquation(DOFindices[iDof]);
+    }
 }
 
 std::vector<double> &CompMesh::Solution() {
-    DebugStop();
+    return(solution);
 }
 
 void CompMesh::LoadSolution(std::vector<double> &Sol) {
-    DebugStop();
+    solution = Sol;
 }
 
 void CompMesh::Print(std::ostream & out) {
-    DebugStop();
+    //ComputeNodElCon();
+    out << "\n\t\tCOMPUTABLE GRID INFORMATIONS:\n\n";
+
+    out << "number of connects            = " << GetNumberDOF() << std::endl;
+    out << "number of elements            = " << this->GetElementVec().size() << std::endl;
+    out << "number of materials           = " << this->GetMathVec().size() << std::endl;
+    out << "dimension of the mesh         = " << this->GetMathVec()[0]->Dimension() << std::endl;
+
+    out << "\n\t Connect Information:\n\n";
+    int64_t i, nelem = GetNumberDOF();
+    for (i = 0; i < nelem; i++) {
+        out << "\n Index" << i << ' ';
+        GetDOFVec()[i].Print(*this, out);
+    }
+    out << "\n\t Computable Element Information:\n\n";
+    nelem = GetElementVec().size();
+    for (i = 0; i < nelem; i++) {
+        if (!GetElement(i)) continue;
+        CompElement *el = GetElement(i);
+        out << "\n Index" << i << ' ';
+        el->Print(out);
+    }
+    out << "\n\t Material Information:\n\n";
+    nelem = GetMathVec().size();
+    for (i = 0; i < nelem; i++) {
+        MathStatement *mat = GetMathVec()[i];
+        if (!mat) DebugStop();
+        mat->Print(out);
+    }
 }
