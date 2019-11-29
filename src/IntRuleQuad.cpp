@@ -18,14 +18,24 @@ void IntRuleQuad::SetOrder(int order) {
     fOrder = order;
 
     IntRule1d dummy(order);
-    int nPoints = dummy.NPoints();
+    //int nPoints = dummy.NPoints();
+
+    int nPoints;
+
+    //If fOrder is even...Else...
+    if (fOrder%2 == 0){
+        nPoints = (int)(fOrder/2)+1;
+    }
+    else{
+        nPoints = (int)((fOrder-1)/2+1);
+    }
 
     fPoints.Resize(nPoints*nPoints,2);
     fWeights.resize(nPoints*nPoints);
 
     VecDouble x_coord(1),y_coord(1);
     double x_weight,y_weight;
-    for(int i=0;i<nPoints;i++){  dummy.Point(i,x_coord,x_weight); std::cout <<"x_coord  " <<x_coord[0] << "weight  " << x_weight << std::endl;
+    for(int i=0;i<nPoints;i++){  dummy.Point(i,x_coord,x_weight);
         for(int j=0;j<nPoints;j++){
             dummy.Point(j,y_coord,y_weight);
             fPoints(nPoints*i+j,0) = x_coord[0];

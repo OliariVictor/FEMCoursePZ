@@ -17,23 +17,67 @@
 #include "ShapeTriangle.h"
 #include "ShapeTetrahedron.h"
 #include "tpanic.h"
+#include "IntRule.h"
+#include "IntRuleQuad.h"
 
 template<class Shape>
-CompElementTemplate<Shape>::CompElementTemplate(): CompElement() {
-    int shapeNumber = NShapeFunctions();
-    dofindexes.resize(shapeNumber);
+CompElementTemplate<Shape>::CompElementTemplate(): CompElement(), dofindexes(0), intrule(0) {
 }
 
 template<class Shape>
 CompElementTemplate<Shape>::CompElementTemplate(int64_t ind, CompMesh *cmesh, GeoElement *geo): CompElement(ind,cmesh,geo) {
-    int shapeNumber = NShapeFunctions();
-    dofindexes.resize(shapeNumber);
+
+    //Setting geoel
+    int numElem = cmesh->GetElementVec().size();
+    cmesh->SetElement(ind,this);
+    geo->SetReference(this);
+
+    //Setting intrule...
+    int order = cmesh->GetDefaultOrder();
+    intrule.SetOrder(2*order);
+    SetIntRule(&intrule);
+
+
+    //Setting material statement...
+    MathStatement *state = cmesh->GetMath(ind);
+    this->SetStatement(state);
+
+    //Setting DOF vec
+    int numSides = geo->NSides();
+    SetNDOF(numSides);
+    for(int sideIndex = 0; sideIndex< numSides ; sideIndex++){
+        GeoElementSide gelSide(geo,sideIndex);
+        GeoElementSide neigh = gelSide.Neighbour();
+
+        while(gelSide != neigh){   //Check if the corresponding DOF was previously defined at the loop which calls this->constructor.
+            if(neigh.Element()->GetReference()) break; // BINGO! DOF already defined.
+            neigh = neigh.Neighbour();
+        }
+        //DOF previously defined...
+        if(gelSide != neigh){
+            int neiIndex = neigh.Element()->GetIndex();
+            CompElement *cel = neigh.Element()->GetReference();
+            this->SetDOFIndex(sideIndex,cel->GetDOFIndex(neigh.Side()));
+        }
+        else {  //DOF to be defined...
+            int order = cmesh->GetDefaultOrder();
+            int nShapes = Shape::NShapeFunctions(sideIndex,order);
+            int nStates = GetStatement()->NState();
+            int ndof = cmesh->GetNumberDOF();
+
+            cmesh->SetNumberDOF(ndof+1); //Allocate one new position in the DOF vector for the DOF to be defined...
+            DOF dof;
+            dof.SetNShapeStateOrder(nShapes,nStates,order);
+            cmesh->SetDOF(ndof,dof);
+            this->SetDOFIndex(sideIndex,ndof);
+        }
+    }
 }
 
 template<class Shape >
-CompElementTemplate<Shape>::CompElementTemplate(const CompElementTemplate & copy): CompElement(copy.GetIndex(),copy.GetCompMesh(),copy.GetGeoElement()) {
-    int shapeNumber = NShapeFunctions();
-    dofindexes.resize(shapeNumber);
+CompElementTemplate<Shape>::CompElementTemplate(const CompElementTemplate & copy): CompElement(copy) {
+    dofindexes = copy.dofindexes;
+    intrule = copy.intrule;
 }
 
 template<class Shape >
@@ -43,8 +87,10 @@ CompElementTemplate<Shape> &CompElementTemplate<Shape>::operator=(const CompElem
     SetIndex(copy.GetIndex());
     SetIntRule(copy.GetIntRule());
     SetStatement(copy.GetStatement());
+
     dofindexes = copy.dofindexes;
-    return(*this);
+    intrule = copy.intrule;
+    return (*this);
 }
 
 template<class Shape >
@@ -70,10 +116,20 @@ void CompElementTemplate<Shape>::GetMultiplyingCoeficients(VecDouble & coefs) co
     VecDouble T;
     T = GetCompMesh()->Solution();
 
-    int length = dofindexes.size();
-    coefs.resize(length);
-
-    for(int i; i< length;i++) coefs[i] = T[dofindexes[i]];
+    coefs.resize(0);
+    int nDof = NDOF();
+    int nState = 0, nShape = 0;
+    for(int dofInd = 0; dofInd < nDof; dofInd++){
+        int64_t dofId = dofindexes[dofInd];
+        DOF dof = this->GetCompMesh()->GetDOF(dofId);
+        nState = dof.GetNState();
+        nShape = dof.GetNShape();
+        for(int eqInd = 0; eqInd < nState*nShape; eqInd++){
+            int cSize = coefs.size();
+            coefs.resize(cSize+1);
+            coefs[cSize] = T[dof.GetFirstEquation()+eqInd];
+        }
+    }
 }
 
 template<class Shape>
@@ -127,13 +183,13 @@ void CompElementTemplate<Shape>::Print(std::ostream &out) {
     {
         out << "\nGeometry: Center Coordinates: ";
         VecDouble coord(3,0);
-        int dim = Shape::Dimension;
-        for(int i =0; i < Shape::nCorners;i++) for(int j =0; j< dim;j++) coord[j] += GetGeoElement()->GetMesh()->Node(GetGeoElement()->NodeIndex(i)).Coord(j);
-        for(int i =0; i <dim; i++) std::cout << "[" << i << "] ,";
+        int dim = GetCompMesh()->GetGeoMesh()->Dimension();
+        for(int i =0; i < Shape::nCorners;i++) for(int j =0; j< dim;j++) coord[j] += GetGeoElement()->GetMesh()->Node(GetGeoElement()->NodeIndex(i)).Coord(j)/Shape::nCorners;
+        for(int i =0; i <dim; i++) std::cout << "[" << coord[i] << "] ,";
     }
     if(this->GetStatement())
     {
-        out << "\nMaterial id " << GetStatement()->GetMatID() << "\n";
+        out << "\nMaterial id: " << GetStatement()->GetMatID() << "\n";
     }
     else {
         out << "\nNo material\n";
@@ -146,6 +202,7 @@ void CompElementTemplate<Shape>::Print(std::ostream &out) {
     {
         out << GetDOFIndex(nod) <<  ' ' ;
     }
+    out << "\n\n------Quadrature------\n";
     GetIntRule()->Print(std::cout);
     out << std::endl;
 

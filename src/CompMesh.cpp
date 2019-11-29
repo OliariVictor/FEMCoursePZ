@@ -21,10 +21,12 @@ CompMesh::CompMesh() {
 
 }
 
-CompMesh::CompMesh(const CompMesh &copy): geomesh(), compelements(), dofs(), mathstatements(), solution(0,0) {
+CompMesh::CompMesh(const CompMesh &copy): geomesh(), compelements(0), dofs(0), mathstatements(0), solution(0,0) {
+    DefaultOrder = 1;
 }
 
-CompMesh::CompMesh(GeoMesh *gmesh): geomesh(gmesh), compelements(), dofs(), mathstatements(), solution(0,0) {
+CompMesh::CompMesh(GeoMesh *gmesh): geomesh(gmesh), compelements(0), dofs(0), mathstatements(0), solution(0,0) {
+    DefaultOrder = 1;
 }
 
 CompMesh::~CompMesh() {
@@ -136,10 +138,15 @@ void CompMesh::LoadSolution(std::vector<double> &Sol) {
 }
 
 void CompMesh::Print(std::ostream & out) {
-    //ComputeNodElCon();
     out << "\n\t\tCOMPUTABLE GRID INFORMATIONS:\n\n";
+    int numConnect;
+    if(DefaultOrder ==1){
+        numConnect = GetGeoMesh()->NumNodes(); out << "number of connects            = " << numConnect << " (" << GetNumberDOF() << ")" << std::endl;
+    }
+    else {
+        numConnect = GetNumberDOF(); out << "number of connects            = " << numConnect << std::endl;
+    }
 
-    out << "number of connects            = " << GetNumberDOF() << std::endl;
     out << "number of elements            = " << this->GetElementVec().size() << std::endl;
     out << "number of materials           = " << this->GetMathVec().size() << std::endl;
     out << "dimension of the mesh         = " << this->GetMathVec()[0]->Dimension() << std::endl;
@@ -147,7 +154,8 @@ void CompMesh::Print(std::ostream & out) {
     out << "\n\t Connect Information:\n\n";
     int64_t i, nelem = GetNumberDOF();
     for (i = 0; i < nelem; i++) {
-        out << "\n Index" << i << ' ';
+        out << "\n---------DOF---------\n";
+        out << "Index: " << i << std::endl;
         GetDOFVec()[i].Print(*this, out);
     }
     out << "\n\t Computable Element Information:\n\n";
@@ -155,7 +163,7 @@ void CompMesh::Print(std::ostream & out) {
     for (i = 0; i < nelem; i++) {
         if (!GetElement(i)) continue;
         CompElement *el = GetElement(i);
-        out << "\n Index" << i << ' ';
+        out << "\n------Element " << i << " -------\n";
         el->Print(out);
     }
     out << "\n\t Material Information:\n\n";
@@ -163,6 +171,7 @@ void CompMesh::Print(std::ostream & out) {
     for (i = 0; i < nelem; i++) {
         MathStatement *mat = GetMathVec()[i];
         if (!mat) DebugStop();
+        out << "Element: " << i<< "\n";
         mat->Print(out);
     }
 }

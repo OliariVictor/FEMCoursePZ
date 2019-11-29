@@ -31,7 +31,7 @@ IntRule &IntRule::operator=(const IntRule &cp) {
 }
 
 int IntRule::NPoints() const {
-    int nPoints;
+    /*int nPoints;
 
     //If fOrder is even...Else...
     if (fOrder%2 == 0){
@@ -41,7 +41,8 @@ int IntRule::NPoints() const {
         nPoints = (int)((fOrder-1)/2+1);
     }
 
-    return nPoints;
+    return nPoints;*/
+    return(fWeights.size());
 }
 
 void IntRule::Print(std::ostream &out) {

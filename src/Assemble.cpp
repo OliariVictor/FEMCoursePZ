@@ -33,7 +33,7 @@ void Assemble::SetMesh(CompMesh *mesh) {
 
 int64_t Assemble::NEquations() {
     //WRONG IMPLEMENTATION!!!!! MUST TAKE INTO ACCOUNT NEIGHBOURING SIDES
-    int ncel = cmesh->GetElementVec().size();
+    /*int ncel = cmesh->GetElementVec().size();
     int sumNodes = 0;
     int numNodes = cmesh->GetGeoMesh()->NumNodes();
     int numElem = cmesh->GetGeoMesh()->NumElements();
@@ -92,7 +92,7 @@ int64_t Assemble::NEquations() {
     int total1 =0;
     if (cOrder == 1) total1 = nodeEq;
     else total1 = sideCount + nodeEq;
-
+    */
     //Computational solution
     int64_t nDof = cmesh->GetNumberDOF();
     int total2 = 0;
@@ -100,8 +100,8 @@ int64_t Assemble::NEquations() {
         DOF dof = cmesh->GetDOF(dofIndex);
         total2 += dof.GetNState()*dof.GetNShape();
     }
-    if(total1 != total2) {std::cout<<"Assemble::NEquations(): Warning: Geometric solution is different from Computational Solution\n"; DebugStop;}
-    return(total1);
+    ///if(total1 != total2) {std::cout<<"Assemble::NEquations(): Warning: Geometric solution is different from Computational Solution\n"; DebugStop;}
+    return(total2);
 }
 
 void Assemble::OptimizeBandwidth() { // This method is not necessary to solve the given problem. Hence It won`t be filled up at this moment.
@@ -120,7 +120,7 @@ void Assemble::Compute(Matrix &globmat, Matrix &rhs) {
     for(int64_t celIndex = 0; celIndex < ncel ; celIndex ++){
         CompElement *cel = cmesh->GetElement(celIndex);
         Matrix EK(0,0),EF(0,0);
-        cel->CalcStiff(EK,EF);
+        cel->CalcStiff(EK,EF); std::cout << "\nElem :" << celIndex << "\nEK: \n"; EK.Print(std::cout);std::cout << "\n\nEF: \n"; EF.Print(std::cout); std::cout <<std::endl;
 
 
         int ndof = cel->NDOF();
@@ -129,13 +129,13 @@ void Assemble::Compute(Matrix &globmat, Matrix &rhs) {
             DOF dof = cmesh->GetDOF(cel->GetDOFIndex(dofIndex));
             int size = dof.GetNState()*dof.GetNShape();
             for(int index = 0; index < size; index++)
-                dofEquations[index] = dof.GetFirstEquation()+index;
+                dofEquations[dofIndex+index] = dof.GetFirstEquation()+index;
         }
 
         int i,j;
         for(int row =0; row <EK.Rows(); row++) {
             i = dofEquations[row];
-            rhs(i,0) += EF(i,0);
+            rhs(i,0) += EF(row,0);
             for(int col =0; col < EK.Cols() ; col++){
                 j = dofEquations[col];
                 globmat(i,j) += EK(row,col);

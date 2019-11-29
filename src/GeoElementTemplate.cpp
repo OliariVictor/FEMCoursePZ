@@ -43,7 +43,7 @@ void GeoElementTemplate<TGeom>::X(const VecDouble &xi, VecDouble &x) {
     //Computing the coordinates of each corner;
     VecInt ind;Geom.GetNodes(ind);
     GeoMesh *mesh = GetMesh();
-    int dim = Geom.Dimension;
+    int dim = GetMesh()->Dimension();
     Matrix nodeCoord(ind.size(),dim,0);
     GeoNode node;
 
@@ -52,7 +52,7 @@ void GeoElementTemplate<TGeom>::X(const VecDouble &xi, VecDouble &x) {
         for(int j =0; j <dim; j++) {
             nodeCoord(i,j) = node.Coord(j);
         }
-    }
+    } //std::cout << "\n Elem Ind" << GetIndex() << "\n";
     Geom.X(xi,nodeCoord,x);
 }
 
@@ -60,15 +60,16 @@ template<class TGeom>
 void GeoElementTemplate<TGeom>::GradX(const VecDouble &xi, VecDouble &x, Matrix &gradx) {
     VecInt ind;Geom.GetNodes(ind);
     GeoMesh *mesh = GetMesh();
-    int dim = Geom.Dimension;
+    int dim = this->GetMesh()->Dimension();
     Matrix nodeCoord(ind.size(),dim,0);
     GeoNode node;
 
-    for(int i = 0; i < ind.size() ; i++ ){
-        node = mesh->Node(i);
+    int i =0;
+    for(auto k: ind ){
+        node = mesh->Node(k);
         for(int j =0; j <dim; j++) {
             nodeCoord(i,j) = node.Coord(j);
-        }
+        }i++;
     }
 
     Geom.GradX(xi,nodeCoord,x,gradx);
@@ -79,7 +80,141 @@ void GeoElementTemplate<TGeom>::Jacobian(const Matrix &gradx, Matrix &jac, Matri
     detjac = 0.0;
     int nrows = gradx.Rows();
     int ncols = gradx.Cols();
-    int dim   = ncols;
+    int meshDim   = ncols;
+    int elemDim = nrows;
+
+    VecDouble v_1(meshDim,0),v_2(meshDim,0);
+    VecDouble v_1_til(3,0),v_2_til(3,0);
+    double norm_v_1 = 0.;
+    double norm_v_1_til = 0.0;
+    double norm_v_2_til = 0.0;
+    double v_1_dot_v_2  = 0.0;
+
+    switch(elemDim){
+        case 0:
+            jac.Resize(elemDim,elemDim);
+            axes.Resize(elemDim,meshDim);
+            jacinv.Resize(elemDim,elemDim);
+            detjac = 1;
+            break;
+        case 1:
+            jac.Resize(elemDim,elemDim);
+            axes.Resize(meshDim,elemDim);
+            jacinv.Resize(elemDim,elemDim);
+            jac.Zero();
+
+            /**  Definitions: v1 -> is the xi_direction of the Gradient*/
+            for (int i = 0; i < meshDim; i++) {
+                v_1[i]  = gradx.GetVal(0,i);
+            }
+
+            for(int i = 0; i < meshDim; i++) {
+                norm_v_1 += v_1[i]*v_1[i];
+            }
+
+            norm_v_1    = sqrt(norm_v_1);
+            jac(0,0)    = norm_v_1;
+            detjac      = norm_v_1;
+
+            if(detjac < 0.00001 && detjac > -0.000001) { std::cout << "Null Jacobian"; DebugStop();}
+
+            jacinv(0,0) = 1.0/detjac;
+
+            for(int i=0; i < meshDim; i++) {
+                axes(i,0) = v_1[i]/norm_v_1;
+            }
+            break;
+
+        case 2:
+            jac.Resize(elemDim,elemDim);
+            axes.Resize(meshDim,elemDim);
+            jacinv.Resize(elemDim,elemDim);
+            jac.Zero();
+
+            /**  Definitions: v1 -> is the xi_direction of the Gradient, v2 -> is the eta_direction of the Gradient*/
+            /**  Definitions: v_1_til and v_2_til -> asscoiated orthonormal vectors to v_1 and v_2*/
+
+            for (int i = 0; i < nrows; i++) {
+                v_1[i]  = gradx.GetVal(i,0);
+                v_2[i]  = gradx.GetVal(i,1);
+            }
+
+            for(int i = 0; i < meshDim; i++) {
+                norm_v_1_til    += v_1[i]*v_1[i];
+                v_1_dot_v_2     += v_1[i]*v_2[i];
+            }
+            norm_v_1_til = sqrt(norm_v_1_til);
+
+            for(int i=0 ; i < meshDim; i++) {
+                v_1_til[i]          = v_1[i] / norm_v_1_til; // Normalizing
+                v_2_til[i]          = v_2[i] - v_1_dot_v_2 * v_1_til[i] / norm_v_1_til;
+                norm_v_2_til   += v_2_til[i]*v_2_til[i];
+            }
+            norm_v_2_til = sqrt(norm_v_2_til);
+
+            jac(0,0) = norm_v_1_til;
+            jac(0,1) = v_1_dot_v_2/norm_v_1_til;
+            jac(1,1) = norm_v_2_til;
+
+            detjac = jac(0,0)*jac(1,1)-jac(1,0)*jac(0,1);
+
+            jacinv(0,0) = +jac(1,1)/detjac;
+            jacinv(1,1) = +jac(0,0)/detjac;
+            jacinv(0,1) = -jac(0,1)/detjac;
+            jacinv(1,0) = -jac(1,0)/detjac;
+
+            if(detjac < 0.00001 && detjac > -0.000001) { std::cout << "Null Jacobian"; DebugStop();}
+
+            for(int i=0; i < meshDim; i++) {
+                v_2_til[i] /= norm_v_2_til; // Normalizing
+                axes(i,0)  = v_1_til[i];
+                axes(i,1)  = v_2_til[i];
+            }
+            break;
+
+        case 3:
+            jac.Resize(3,3);
+            axes.Resize(3,3);
+            jacinv.Resize(3,3);
+
+            jac = gradx;
+            detjac -= jac(0,2)*jac(1,1)*jac(2,0);//- a02 a11 a20
+            detjac += jac(0,1)*jac(1,2)*jac(2,0);//+ a01 a12 a20
+            detjac += jac(0,2)*jac(1,0)*jac(2,1);//+ a02 a10 a21
+            detjac -= jac(0,0)*jac(1,2)*jac(2,1);//- a00 a12 a21
+            detjac -= jac(0,1)*jac(1,0)*jac(2,2);//- a01 a10 a22
+            detjac += jac(0,0)*jac(1,1)*jac(2,2);//+ a00 a11 a22
+
+            if(detjac == 0){
+                cout << "Singular Jacobian, determinant of jacobian = " << detjac << std::endl; DebugStop();
+            }
+
+            jacinv(0,0) = (-jac(1,2)*jac(2,1)+jac(1,1)*jac(2,2))/detjac;//-a12 a21 + a11 a22
+            jacinv(0,1) = ( jac(0,2)*jac(2,1)-jac(0,1)*jac(2,2))/detjac;//a02 a21 - a01 a22
+            jacinv(0,2) = (-jac(0,2)*jac(1,1)+jac(0,1)*jac(1,2))/detjac;//-a02 a11 + a01 a12
+            jacinv(1,0) = ( jac(1,2)*jac(2,0)-jac(1,0)*jac(2,2))/detjac;//a12 a20 - a10 a22
+            jacinv(1,1) = (-jac(0,2)*jac(2,0)+jac(0,0)*jac(2,2))/detjac;//-a02 a20 + a00 a22
+            jacinv(1,2) = ( jac(0,2)*jac(1,0)-jac(0,0)*jac(1,2))/detjac;//a02 a10 - a00 a12
+            jacinv(2,0) = (-jac(1,1)*jac(2,0)+jac(1,0)*jac(2,1))/detjac;//-a11 a20 + a10 a21
+            jacinv(2,1) = ( jac(0,1)*jac(2,0)-jac(0,0)*jac(2,1))/detjac;//a01 a20 - a00 a21
+            jacinv(2,2) = (-jac(0,1)*jac(1,0)+jac(0,0)*jac(1,1))/detjac;//-a01 a10 + a00 a11
+
+            for(int i =0; i<3; i++) for(int j = 0; j<3;j++) axes(i,j) = 0;
+            axes(0,0) = axes(1,1) = axes(2,2) = 1;
+            break;
+
+        default:
+            cout << "Please insert a valid dimension number";
+            DebugStop();
+    }
+}
+//The previously implemented Jacobian is only useful for elements aligned with XYZ coordinates. Hence, it doesn't suit many boundary elements. For example, if a tetrahedron face which does not belong to the planes XY, XZ,YZ is a boundary element, the following Jacobian is not valid.
+/*template<class TGeom>
+void GeoElementTemplate<TGeom>::Jacobian(const Matrix &gradx, Matrix &jac, Matrix &axes, double &detjac, Matrix &jacinv) {
+    detjac = 0.0;
+    int nrows = gradx.Rows();
+    int ncols = gradx.Cols();
+    int dim   = nrows;
     TMatrix temp;
 
     switch(dim){
@@ -154,7 +289,7 @@ void GeoElementTemplate<TGeom>::Jacobian(const Matrix &gradx, Matrix &jac, Matri
             cout << "Please insert a valid dimension number";
             DebugStop();
     }
-}
+}*/
 
 template<class TGeom>
 int GeoElementTemplate<TGeom>::WhichSide(VecInt &SideNodeIds) {

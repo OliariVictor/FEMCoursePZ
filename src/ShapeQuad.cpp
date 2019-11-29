@@ -26,7 +26,7 @@ void ShapeQuad::Shape(const VecDouble &xi, VecInt &orders, VecDouble &phi, Matri
     while (no < nSides) {
         if (orders[no] != 1 && orders[no] != 2) { std::cout << "Requested order not defined in this scope";DebugStop();}
         if (no < 4) {
-            if (orders[no] == 1) {
+            if (orders[no] == 1 || orders[no] == 2) {
                 switch (no) {
                     case 0:
                         phi[0] = phiBase(0, 0) * phiBase(1, 0);
@@ -77,7 +77,7 @@ int ShapeQuad::NShapeFunctions(int side, int order) {
         case 1:
         case 2:
         case 3:
-            if(order == 1) return (1);
+            if(order == 1 || order == 2) return (1);
             else {std::cout << "Corner nodes shape are strictly defined at order 1"; DebugStop();}
         case 4:
         case 5:

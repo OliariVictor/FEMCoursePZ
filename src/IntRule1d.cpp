@@ -53,9 +53,18 @@ void IntRule1d::gauleg(const double x1, const double x2, VecDouble &co, VecDoubl
 
 void IntRule1d::SetOrder(int order){
     fOrder = order;
-    int IntOrder = IntRule::NPoints();
-    if (IntOrder <1) DebugStop();
-    switch(IntOrder)
+    //int IntOrder = IntRule::NPoints();
+    int nPoints;
+
+    //If fOrder is even...Else...
+    if (fOrder%2 == 0){
+        nPoints = (int)(fOrder/2)+1;
+    }
+    else{
+        nPoints = (int)((fOrder-1)/2+1);
+    }
+    if (nPoints <1) DebugStop();
+    switch(nPoints)
     {
         case 1:
             fPoints.Resize(1,1);
@@ -64,7 +73,7 @@ void IntRule1d::SetOrder(int order){
             fWeights[0] = 2.;
         break;
         case 2:
-            fPoints.Resize(2,1);cout <<"Specified order not defined";
+            fPoints.Resize(2,1);
             fWeights.resize(2);
 
             fPoints(0,0) = -1/sqrt(3);
@@ -100,12 +109,12 @@ void IntRule1d::SetOrder(int order){
             fWeights[3] = fWeights[0];
             break;
         default:
-            fPoints.Resize(IntOrder,1);
-            fWeights.resize(IntOrder);
+            fPoints.Resize(nPoints,1);
+            fWeights.resize(nPoints);
 
-            VecDouble coordinates(IntOrder), weights(IntOrder);
+            VecDouble coordinates(nPoints), weights(nPoints);
             gauleg(-1,1,coordinates,weights);
-            for (int i =0 ; i< IntOrder; i++) {
+            for (int i =0 ; i< nPoints; i++) {
                 fPoints(i,0) = coordinates[i];
                 fWeights[i] = weights[i];
             }

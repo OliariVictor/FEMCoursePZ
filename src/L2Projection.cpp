@@ -37,7 +37,7 @@ L2Projection::L2Projection(const L2Projection &copy) {
 L2Projection &L2Projection::operator=(const L2Projection &copy) {
     BCType = copy.GetBCType();
     projection = copy.GetProjectionMatrix();
-    BCVal1 = copy.Val1(0, 0);
+    BCVal1 = copy.Val1();
     BCVal2 = copy.Val2();
     SetMatID(-1);
 
@@ -66,12 +66,13 @@ void L2Projection::Contribute(IntPointData &integrationpoint, double weight, Mat
 
     int type = GetBCType(); // 0 : Dirichlet ; 1 : Neumann ;
     double alfa;
-    int dim = this->Val2().Rows();
+    VecDouble res(0); Matrix dRes(0,0);
+    SolutionExact(X,res,dRes);
 
     switch(type){
         case 0: // Dirichlet;
             for(int i =0; i < size ; i++) {
-                alfa = Val1()(0,0);     //Val1 i
+                alfa = res[0]; //std::cout << "\n\n\nVal1:" << alfa << "\n\n\n";    //Val1 i
                 EF(i,0) += weight * gBigNumber * alfa * integrationpoint.phi[i];
                 for(int j =0 ; j< size; j++){
                     EK(i,j) += weight*gBigNumber*integrationpoint.phi[i]*integrationpoint.phi[j];
@@ -129,7 +130,6 @@ int L2Projection::VariableIndex(const PostProcVar var) const {
     int nEnum = 3;
     for(int i =0; i< nEnum; i++) if(var == PostProcVar(i)) return i;
 }
-}
 
 L2Projection::PostProcVar L2Projection::VariableIndex(const std::string & name) {
     //  enum PostProcVar {ENone, ESol, EDSol};
@@ -139,10 +139,14 @@ L2Projection::PostProcVar L2Projection::VariableIndex(const std::string & name) 
 }
 
 int L2Projection::NSolutionVariables(const PostProcVar var) {
-    switch(var) {
-        case ESol: return NState();
-        case EDSol: return Dimension();
-        case ENone: return 0;
+    switch (var) {
+        case ESol:
+            return NState();
+        case EDSol:
+            return Dimension();
+        case ENone:
+            return 0;
+    }
 }
 
 void L2Projection::PostProcessSolution(const IntPointData &integrationpoint, const int var, VecDouble &sol) const {
@@ -161,5 +165,5 @@ void L2Projection::PostProcessSolution(const IntPointData &integrationpoint, con
             for (int i = 0 ;i< rows ; i++) for(int j = 0 ; j< cols ; j++) sol[j+cols*i] = du_hdx(i,j); break;
         case ENone: break;
         default: std::cout << "Uncovered PostProcVar Value";
-    }
+    };
 }

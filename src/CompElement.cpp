@@ -92,16 +92,16 @@ void CompElement::SetCompMesh(CompMesh *mesh) {
 }
 
 void CompElement::InitializeIntPointData(IntPointData &data) const {
-    int dim = geoel->GetMesh()->Dimension();
+    int dim = geoel->GetMesh()->Dimension();int eleDim = geoel->GetReference()->Dimension();
     int shapeNum = this->NShapeFunctions();
     int nState = this->mat->NState();
     data.ksi.resize(dim,-10);
     data.weight = -10;
     data.phi.resize(shapeNum);
-    data.dphidksi.Resize(shapeNum,dim);
+    data.dphidksi.Resize(shapeNum,eleDim);
     data.x.resize(dim);
-    data.gradx.Resize(dim,dim);
-    data.axes.Resize(dim,dim);
+    data.gradx.Resize(eleDim,dim);
+    data.axes.Resize(eleDim,eleDim);
     data.detjac = 0;
     data.dphidx.Resize(shapeNum,dim);
     data.solution.resize(nState);
@@ -130,21 +130,21 @@ void CompElement::ComputeRequiredData(IntPointData &data, VecDouble &intpoint) c
 
     ShapeFunctions(intpoint,data.phi,data.dphidksi);
 
-    geoel->GradX(intpoint,data.x,data.gradx);
+    geoel->GradX(intpoint,data.x,data.gradx); std::cout << "\n\nGradX\n\n"; data.gradx.Print();
     geoel->X(intpoint,data.x);
     Matrix jacinv(dim,dim,0), jac(dim,dim,0);
-    geoel->Jacobian(data.gradx,jac,data.axes,data.detjac,jacinv);
+    geoel->Jacobian(data.gradx,jac,data.axes,data.detjac,jacinv); std::cout << "\n\nJacInv\n\n";jacinv.Print();
+    //std::cout << "\n\nCompElement::Convert2Axes: Print dphi\n"; data.dphidksi.Print(std::cout); std::cout << "\n\n";
+    Convert2Axes(data.dphidksi, jacinv,data.dphidx); //std::cout << "\n\ndphidksi: \n"; data.dphidksi.Print(std::cout);std::cout << "\n\ndphidx: \n"; data.dphidx.Print(std::cout);
 
-    Convert2Axes(data.dphidksi, jacinv,data.dphidx);
-
-    GetMultiplyingCoeficients(data.coefs);
-    data.ComputeSolution(); //fill solution, dsoldksi and dsoldx
+    //GetMultiplyingCoeficients(data.coefs);
+    //data.ComputeSolution(); //fill solution, dsoldksi and dsoldx
 }
 
 void CompElement::Convert2Axes(const Matrix &dphi, const Matrix &jacinv, Matrix &dphidx) const {
     //Convert parameter shape derivative into x,y,z coordinates shape derivative;
-    int dim = dphi.Cols();
-    for (int i = 0; i < dim; i++) {
+    int dim = dphi.Cols(); dphidx.Zero();
+    for (int i = 0; i < dphi.Rows(); i++) {
         for (int j = 0; j < dim; j++) {
             for (int k = 0; k < dim; k++) {
                 dphidx(i, j) += dphi.GetVal(i, k) * jacinv.GetVal(j, k);
@@ -160,7 +160,7 @@ void CompElement::CalcStiff(Matrix &ek, Matrix &ef) const {
     int ndof = NDOF();
 
     ek.Resize(ndof,ndof); ef.Resize(ndof,1);
-    for(int i =0; i< ndof; i++) { ef(i,1) = 0; for(int j = 0; j < ndof; j++) ek(i,j) = 0;}
+    for(int i =0; i< ndof; i++) { ef(i,0) = 0; for(int j = 0; j < ndof; j++) ek(i,j) = 0;}
 
     VecDouble intPoint(dim,0);
     double weights(0);
@@ -198,8 +198,11 @@ void CompElement::EvaluateError(std::function<void(const VecDouble &loc, VecDoub
     int nintrulepoints = intRuleError->NPoints();
 
     for(int i = 0; i<nintrulepoints ; i++){
+        //if(this->GetStatement()->GetMatID() != 1) continue;
         intRuleError->Point(i,data.ksi,data.weight);
         ComputeRequiredData(data,data.ksi);
+        GetMultiplyingCoeficients(data.coefs);
+        data.ComputeSolution();
         if(data.detjac < 0) std::cout << "CompElement::EvaluateError: Waring: detjac is not strictly positive";
         weight = data.weight*data.detjac;
 
@@ -208,7 +211,8 @@ void CompElement::EvaluateError(std::function<void(const VecDouble &loc, VecDoub
         mat->ContributeError(data,u,du,val);
 
         for(int ier = 0; ier < numErrors; ier++) errors[ier] += val[ier]*weight;
-        if(errors[2] < abs(val[2])) errors[2] = abs(val[2]);
+        if (val[2] < 0) {if (-1*val[2]>errors[2]) errors[2] = -1*val[2];}
+        else if(val[2] > errors[2]) errors[2] = val[2];
     }
 
     for(int ier = 0; ier < numErrors ; ier++) {
@@ -221,6 +225,7 @@ void CompElement::Solution(VecDouble &intpoint, int var, VecDouble &sol) const {
     InitializeIntPointData(data);
     ComputeRequiredData(data,intpoint);
 
+    GetMultiplyingCoeficients(data.coefs);
     data.ComputeSolution();
     sol.resize(GetStatement()->Dimension());
 

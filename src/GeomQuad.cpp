@@ -27,25 +27,32 @@ void GeomQuad::Shape(const VecDouble &xi, VecDouble &phi, Matrix &dphi) {
     phi[1] = 0.25*(1+xi[0])*(1-xi[1]); dphi(1,0) = +.25*(1-xi[1]); dphi(1,1) = -.25*(1+xi[0]);
     phi[2] = 0.25*(1+xi[0])*(1+xi[1]); dphi(2,0) = +.25*(1+xi[1]); dphi(2,1) = +.25*(1+xi[0]);
     phi[3] = 0.25*(1-xi[0])*(1+xi[1]); dphi(3,0) = -.25*(1+xi[1]); dphi(3,1) = +.25*(1-xi[0]);
-
 }
 
 void GeomQuad::X(const VecDouble &xi, Matrix &NodeCo, VecDouble &x) {
     VecDouble fphi(4,0); Matrix fdphi(4,2,0);
-    Shape(xi,fphi,fdphi); x[0] = 0;x[1] = 0; NodeCo.Print(std::cout);
+    Shape(xi,fphi,fdphi);
+    int dim = NodeCo.Cols();
+    x.resize(dim); for(int i =0 ; i < dim ; i++) x[i] = 0;
+
     for(int i = 0 ; i<4 ; i++){
-        x[0] += NodeCo(i,0)*fphi[i];
-        x[1] += NodeCo(i,1)*fphi[i];
+        for(int j =0; j<dim ; j++)
+            x[j] += NodeCo(i,j)*fphi[i];
     }
 }
 
 void GeomQuad::GradX(const VecDouble &xi, Matrix &NodeCo, VecDouble &x, Matrix &gradx) {
     VecDouble fphi(4,0); Matrix fdphi(4,2,0);
     Shape(xi,fphi,fdphi);
-    gradx(0,0) = gradx(0,1) = gradx(1,0) =gradx(1,1) = 0;
+
+    int dim = NodeCo.Cols();
+    gradx.Resize(dim,2);
+    for(int i =0 ; i < dim ; i++) for(int j =0; j<2 ; j++) gradx(i,j) = 0;
+    //std::cout<<"\n\n\nNodeCo\n\n\n";NodeCo.Print(std::cout);
+    //std::cout<<"\n\n\ndPhi\n\n\n"; fdphi.Print(std::cout);
     for(int i = 0; i < 2; i++) for(int j =0 ; j < 4;j++) {
-        gradx(0,i) += NodeCo(j,0)*fdphi(j,i);
-        gradx(1,i) += NodeCo(j,1)*fdphi(j,i);
+        for(int k = 0; k < dim ; k++)
+            gradx(k,i) += NodeCo(j,k)*fdphi(j,i);
     }
 }
 

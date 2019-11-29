@@ -72,7 +72,7 @@ int ShapeTetrahedron::NShapeFunctions(int side, int order) {
         case 1:
         case 2:
         case 3:
-            if(order == 1) return (1);
+            if(order == 1 || order == 2) return (1);
             else {std::cout << "Corner nodes shape are strictly defined at order 1"; DebugStop();}
         case 4:
         case 5:

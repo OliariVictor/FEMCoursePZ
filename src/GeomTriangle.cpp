@@ -31,20 +31,28 @@ void GeomTriangle::Shape(const VecDouble& xi, VecDouble& phi, Matrix& dphi) {
 
 void GeomTriangle::X(const VecDouble &xi, Matrix &NodeCo, VecDouble &x) {
     VecDouble fphi(3,0); Matrix fdphi(3,2,0);
-    Shape(xi,fphi,fdphi); x[0] = 0; x[1] = 0;
+    Shape(xi,fphi,fdphi);
+
+    int dim = NodeCo.Cols();
+    x.resize(dim); for(int i =0 ; i < dim ; i++) x[i] = 0;
+
     for(int i = 0 ; i<3 ; i++){
-        x[0] += NodeCo(i,0)*fphi[i];
-        x[1] += NodeCo(i,1)*fphi[i];
+        for(int j =0; j < dim; j++)
+            x[j] += NodeCo(i,j)*fphi[i];
     }
 }
 
 void GeomTriangle::GradX(const VecDouble &xi, Matrix &NodeCo, VecDouble &x, Matrix &gradx) {
     VecDouble fphi(3,0); Matrix fdphi(3,2,0);
     Shape(xi,fphi,fdphi);
-    gradx(0,0) = gradx(0,1) = gradx(1,0) =gradx(1,1) = 0;
+
+    int dim = NodeCo.Cols();
+    gradx.Resize(dim,2);
+    for(int i =0 ; i < dim ; i++) for(int j =0; j<2 ; j++) gradx(i,j) = 0;
+
     for(int i = 0; i < 2; i++) for(int j =0 ; j < 3;j++) {
-            gradx(0,i) += NodeCo(j,0)*fdphi(j,i);
-            gradx(1,i) += NodeCo(j,1)*fdphi(j,i);
+        for(int k = 0; k < dim ; k++)
+            gradx(k,i) += NodeCo(j,k)*fdphi(j,i);
     }
 }
 

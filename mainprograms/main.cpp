@@ -36,19 +36,21 @@ using std::cin;
 using namespace std;
 
 void force2D(const VecDouble &co, VecDouble &result){
-    result.resize(0); // nstate = 1
-    if (co.size() != 2) {std::cout << "force2D: coordinate must have two dimensions"; DebugStop()};
+    result.resize(1); // nstate = 1
+    if (co.size() != 2) {std::cout << "force2D: coordinate must have two dimensions"; DebugStop();};
     result[0] = sin(co[0])+cos(co[1]);
 }
 
-void lapace2D(const VecDouble &co, VecDouble &result, Matrix &deriv){
-    result.resize(0); // nstate = 1
-    Matrix.Resize(2,0);
-    if (co.size() != 2) {std::cout << "force2D: coordinate must have two dimensions"; DebugStop()};
+void laplace2D(const VecDouble &co, VecDouble &result, Matrix &deriv){
+    result.resize(1); // nstate = 1
+    deriv.Resize(2,1);
+    if (co.size() != 2) {std::cout << "force2D: coordinate must have two dimensions"; DebugStop();};
     result[0] = sin(co[0])+cos(co[1]);
     deriv(0,0) = cos(co[0]);
     deriv(1,0) = sin(co[1]);
 }
+
+GeoMesh *CreateGmeshOrdem1(int nx );
 
 int main ()
 {
@@ -241,83 +243,184 @@ IntRule emptyConstructor;
 
 
     //Setting Geomesh;
-    GeoMesh mesh;
-    mesh.SetNumNodes(9);
-    mesh.SetNumElements(4);
-    mesh.SetDimension(2);
+    /*GeoMesh *gmesh = new GeoMesh();
+    gmesh->SetNumNodes(9);
+    gmesh->SetNumElements(6);
+    gmesh->SetDimension(2);
 
     //Defining node coordinates
     double index = 0;
-    for(int i =0; i <mesh.NumNodes(); i +=3) {index = double(i/3); mesh.Node(i).SetCo({0,index*5});}
-    for(int i =1; i <mesh.NumNodes(); i +=3) {index = double(i/3); mesh.Node(i).SetCo({index+5,index*5});}
-    for(int i =2; i <mesh.NumNodes(); i +=3) {index = double(i/3); mesh.Node(i).SetCo({index+10,index*5});}
+    for(int i =0; i <gmesh->NumNodes(); i +=3) {index = double(i/3); gmesh->Node(i).SetCo({0,index*.5});}
+    for(int i =1; i <gmesh->NumNodes(); i +=3) {index = double(i/3); gmesh->Node(i).SetCo({0.5,index*.5});}
+    for(int i =2; i <gmesh->NumNodes(); i +=3) {index = double(i/3); gmesh->Node(i).SetCo({1,index*.5});}
 
     VecInt oneIndices = {0,1,4,3},
            twoIndices = {1,2,5,4},
            threeIndices = {4,5,8,7},
-           fourIndices = {3,4,7,6};
+           fourIndices = {3,4,7,6},
+           fiveIndices = {0,1},
+           sixIndices = {1,2},
+           sevenIndices = {2,5},
+           eightIndices = {5,8},
+           nineIndices = {8,7},
+           tenIndices ={7,6},
+           elevenIndices ={6,3},
+           twelveIndices ={3,0};
 
-    GeoElementTemplate<GeomQuad> one(oneIndices,0,&mesh,0),
-                                 two(twoIndices,1,&mesh,1),
-                                 three(threeIndices,2,&mesh,2),
-                                 four(fourIndices,3,&mesh,3);
-    mesh.BuildConnectivity();
+    GeoElementTemplate<GeomQuad> one(oneIndices,1,gmesh,0),
+                                 two(twoIndices,1,gmesh,1),
+                                 three(threeIndices,1,gmesh,2),
+                                 four(fourIndices,1,gmesh,3);
 
-    mesh.Print(std::cout);
+    GeoElementTemplate<Geom1d> five(fiveIndices,-1,gmesh,4),
+                               six(sixIndices,-1,gmesh,5);
+                               //seven(sevenIndices,-1,gmesh,6),
+                               //eight(eightIndices,-1,gmesh,7),
+                               //nine(nineIndices,-1,gmesh,8),
+                               //ten(tenIndices,-1,gmesh,9),
+                               //eleven(elevenIndices,-1,gmesh,10),
+                               //twelve(twelveIndices,-1,gmesh,11);
 
-    Poisson math;
-    CompMesh cmesh(&mesh);
-    int numElem = cmesh.GetElementVec().size();
-    for(int elemInd = 0; elemInd < numElem; elemInd++) {
-        GeoElement *gel = mesh.Element(elemInd);
-        int nSides = gel->NSides();
-        for(int sideInd = 0; sideInd < nSides ; sideInd++){
-            GeoElementSide *gelSide = new GeoElementSide(gel,sideInd);
-            gel->
+    gmesh->BuildConnectivity();*/
+
+    GeoMesh *gmesh = CreateGmeshOrdem1(2);
+
+
+    gmesh->Print(std::cout);
+
+
+    CompMesh *cmesh = new CompMesh(gmesh);
+    int numElem = gmesh->NumElements();
+    int poissonId = 1;
+    Matrix perm(0,0), proj(0,0);
+    cmesh->SetNumberMath(numElem);
+    cmesh->SetNumberElement(numElem);
+
+    for(int elemInd = 0; elemInd < numElem ; elemInd++){
+        //Set cmesh's statement...
+        GeoElement *gel = gmesh->Element(elemInd);
+        int matId = gel->Material(), matDim = -1;
+
+        switch(gel-> Type()){
+            case EOned: matDim =1; break;
+            case ETriangle: case EQuadrilateral: matDim = 2; break;
+            case ETetraedro: matDim = 3; break;
+            default: std::cout << "Invalid Element Type"; DebugStop();
+        }
+
+        if(matId == poissonId){    //Interior Element
+            Poisson *mat = new Poisson(poissonId,perm);
+            mat->SetDimension(matDim);
+            mat->SetForceFunction(force2D);
+            mat->SetExactSolution(laplace2D);
+            //mat->NState();
+            cmesh->SetMathStatement(elemInd,mat);
+        }
+        else{    //Outer Element
+            //L2Projection(int bctype, int materialid, Matrix &proj, Matrix Val1, Matrix Val2);
+            Matrix Val1(1,1),Val2(1,1);
+            L2Projection *mat = new L2Projection(0,matId,proj,Val1,Val2);
+            mat->SetDimension(matDim);
+            mat->SetForceFunction(force2D);
+            mat->SetExactSolution(laplace2D);
+            cmesh->SetMathStatement(elemInd,mat);
+        }
     }
-    vector<DOF> dofVec1;
+    cmesh->SetDefaultOrder(1);
+    cmesh->AutoBuild();
+    cmesh->Print(std::cout);
+
+    Analysis analysis(cmesh);
+    analysis.RunSimulation();
+    VecDouble Sol = cmesh->Solution();
+
+    PostProcessTemplate<Poisson> process;
+    process.SetExact(laplace2D);
+    analysis.PostProcessError(std::cout,process);
+    /*Matrix nodes(9,9,0);
+    nodes(0,0) = 0; nodes(0,1)= 0;
+    nodes(1,0) = 0.5; nodes(1,1)= 0.;
+    nodes(2,0) = 0.5; nodes(2,1)= 0.5;
+    nodes(3,0) = 0.; nodes(3,1)= 0.5;
+    nodes(4,0) = 1.; nodes(4,1)= 0.;
+    nodes(5,0) = 1.; nodes(5,1)= 0.5;
+    nodes(6,0) = 0.5; nodes(6,1)= 1.;
+    nodes(7,0) = 0.; nodes(7,1)= 1.;
+    nodes(8,0) = 1.; nodes(8,1)= 1.;
+    vector<VecDouble> exact(9); Matrix vide(0,0);
+    for(int ni = 0; ni < nodes.Rows(); ni++){
+        VecDouble coord = {nodes(ni,0),nodes(ni,1)};
+        laplace2D(coord, reinterpret_cast<VecDouble &>(exact[ni]), vide); std::cout << "\n exact:   " << exact[ni][0];
+    }*/
 
 
+    process.AppendVariable("Sol");
+    process.AppendVariable("Sol_Exact");
+    process.AppendVariable("Force");
 
-    cmesh.AutoBuild(); //Create the necessary CompElements && set firstEquation values.
-
-
-
-    };
-    //std::function<void(const VecDouble &co, VecDouble &result)> forceFunction;
-
-    //std::function<void(const VecDouble &loc, VecDouble &result, Matrix &deriv)> SolutionExact;
-
-
-    //VTKGeoMesh::PrintGMeshVTK(&mesh,"FirstVTK_1.vtk");
-    //Computational Mesh
-
-    /*CompMesh cmesh(&mesh);
-
-    CompElementTemplate<ShapeQuad> cone(0,&cmesh, &one),
-                                   ctwo(0,&cmesh, &two),
-                                   cthree(0,&cmesh, &three),
-                                   cfour(0,&cmesh, &four);
-
-    vector<DOF> dofs;
-
-
-
-    cmesh.SetMathVec()
-    cmesh.SetDOFVec()
-    //
-    //
-    //
-    //
-    //
-    // cmesh.AutoBuild();
-    //cmesh.Print(std::cout);*/
-
-
-
-
+    VTKGeoMesh::PrintGMeshVTK(gmesh,"GMESH.vtk");
+    VTKGeoMesh::PrintCMeshVTK(cmesh,2,"CMESH.vtk"); //
+    //analysis.PostProcessSolution("SOLUTION.vtk",process);
 }
 
+GeoMesh *CreateGmeshOrdem1(int nx ){
+    GeoMesh *gmesh = new GeoMesh();
+    int numNodes = (nx+1)*(nx+1);
+    gmesh->SetNumNodes(numNodes);
+    int numElem = nx*nx+4*nx;
+    gmesh->SetNumElements(numElem);
+    gmesh->SetDimension(2);
 
+    //Defining node coordinates
+    double h = 1./nx;
+    for(int i =0; i < nx+1;i++) for(int j = 0; j < nx+1; j++) gmesh->Node(i*(nx+1)+j).SetCo({h*j,h*i});
+
+    VecInt indices(4,0);int index = 0;
+    for(int xInd = 0; xInd < nx; xInd++) for(int yInd = 0; yInd < nx ; yInd++){
+        indices[0] = (nx+1)*(xInd) + yInd;
+        indices[1] = (nx+1)*(xInd) + yInd+1;
+        indices[3] = (nx+1)*(xInd+1) + yInd;
+        indices[2] = (nx+1)*(xInd+1) + yInd+1;
+        GeoElementTemplate<GeomQuad> *quad = new GeoElementTemplate<GeomQuad>(indices,1,gmesh,index);
+        gmesh->SetElement(index,quad);
+        index++;
+    }
+    //Bottom
+    VecInt indicesBC(nx,0);
+    for(int BCind = 0; BCind < nx; BCind++){
+        indicesBC[0] = BCind;
+        indicesBC[1] = BCind+1;
+        GeoElementTemplate<Geom1d> *BC = new GeoElementTemplate<Geom1d>(indicesBC,-1,gmesh,index);
+        gmesh->SetElement(index,BC);
+        index++;
+    }
+    //Right
+    for(int BCind = 0; BCind < nx; BCind++){
+        indicesBC[0] = nx+(nx+1)*BCind;
+        indicesBC[1] = indicesBC[0]+(nx+1);
+        GeoElementTemplate<Geom1d> *BC = new GeoElementTemplate<Geom1d>(indicesBC,-1,gmesh,index);
+        gmesh->SetElement(index,BC);
+        index++;
+    }
+    //TOP
+    for(int BCind = 0; BCind < nx; BCind++){
+        indicesBC[0] = (numNodes-1)-BCind;
+        indicesBC[1] = indicesBC[0]-1;
+        GeoElementTemplate<Geom1d> *BC = new GeoElementTemplate<Geom1d>(indicesBC,-1,gmesh,index);
+        gmesh->SetElement(index,BC);
+        index++;
+    }
+    //Left
+    for(int BCind = 0; BCind < nx; BCind++){
+        indicesBC[0] = numNodes-(nx+1)*(1+BCind);
+        indicesBC[1] = indicesBC[0]-(nx+1);
+        GeoElementTemplate<Geom1d> *BC = new GeoElementTemplate<Geom1d>(indicesBC,-1,gmesh,index);
+        gmesh->SetElement(index,BC);
+        index++;
+    }
+
+    gmesh->BuildConnectivity();
+    return(gmesh);
+}
 
 

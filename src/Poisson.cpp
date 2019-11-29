@@ -92,10 +92,11 @@ void Poisson::ContributeError(IntPointData &data, VecDouble &u_exact, Matrix &du
     for (int i =0; i < uh.size(); i++){
         e = uh[i] - u_exact[i];
         errors[0] += e*e;
-        if(abs(e) > errors[2]) errors[2] = abs(e);
+        if (e < 0) {if (-1*e>errors[2]) errors[2] = -1*e;}
+        else if(e > errors[2]) errors[2] = e;
     }
     errors[1] = errors[0];
-    double de;
+    double de; std::cout << "\n\nDuDx\n"; duhDx.Print(std::cout); std::cout << "\n\nDu_Exact\n"; du_exact.Print(std::cout);
     for(int i = 0 ; i< duhDx.Rows();i++) for(int j = 0; j <duhDx.Cols(); j++) {
         de = duhDx(i,j) - du_exact(i,j);
         errors[0] += de*de;
@@ -107,11 +108,12 @@ void Poisson::Contribute(IntPointData &data, double weight, Matrix &EK, Matrix &
     VecDouble ksi = data.ksi;
     VecDouble X = data.x;
     int size = data.phi.size();
-
+    //std::cout << "\ndphidx:\n";
+    //data.dphidx.Print(std::cout);
     VecDouble f(NState(),0);
     for(int i =0; i< size;i++){
         forceFunction(X,f);
-        for(int k = 0; k <NState();k++) EF(i,0) += weight*(f[k]*data.phi[i]);    //Loop is necessary to taken into account multiple state variables.
+        for(int k = 0; k <NState();k++) {EF(i,0) += weight*(f[k]*data.phi[i]);}   //std::cout<<"\nf[k] = "<<f[k]<<"\nphi[i] =" << data.phi[i]<< "\n\nDetJac: "<< data.detjac<<  std::endl;}//Loop is necessary to taken into account multiple state variables.
         for(int j =0; j < size; j++){
             EK(i,j) += weight*(data.dphidx(i,0)*data.dphidx(j,0)+data.dphidx(i,1)*data.dphidx(j,1));
         }
