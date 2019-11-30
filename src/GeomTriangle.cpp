@@ -24,7 +24,7 @@ GeomTriangle& GeomTriangle::operator=(const GeomTriangle& copy) {
 }
 
 void GeomTriangle::Shape(const VecDouble& xi, VecDouble& phi, Matrix& dphi) {
-    phi[0] = 1 - xi[0] - xi[1]; dphi(0,0) = -xi[1]; dphi(0,1) = -xi[0];
+    phi[0] = 1 - xi[0] - xi[1]; dphi(0,0) = -1; dphi(0,1) = -1;
     phi[1] = xi[0]; dphi(1,0) = 1; dphi(1,1) = 0;
     phi[2] = xi[1]; dphi(2,0) = 0; dphi(2,1) = 1;
 }
@@ -34,7 +34,7 @@ void GeomTriangle::X(const VecDouble &xi, Matrix &NodeCo, VecDouble &x) {
     Shape(xi,fphi,fdphi);
 
     int dim = NodeCo.Cols();
-    x.resize(dim); for(int i =0 ; i < dim ; i++) x[i] = 0;
+    x.resize(dim); for(int i =0 ; i < dim ; i++) x[i] = 0; //std::cout << "NodeCoord\n"; NodeCo.Print();
 
     for(int i = 0 ; i<3 ; i++){
         for(int j =0; j < dim; j++)
@@ -46,7 +46,7 @@ void GeomTriangle::GradX(const VecDouble &xi, Matrix &NodeCo, VecDouble &x, Matr
     VecDouble fphi(3,0); Matrix fdphi(3,2,0);
     Shape(xi,fphi,fdphi);
 
-    int dim = NodeCo.Cols();
+    int dim = NodeCo.Cols(); std::cout << "\n\nTriangle Node coordinate:\n";NodeCo.Print(); std::cout << "\n\nfdphi\n";fdphi.Print();
     gradx.Resize(dim,2);
     for(int i =0 ; i < dim ; i++) for(int j =0; j<2 ; j++) gradx(i,j) = 0;
 

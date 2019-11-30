@@ -32,7 +32,10 @@ void ShapeTetrahedron::Shape(const VecDouble &xi, VecInt &orders, VecDouble &phi
 
     auto volume = [&](int i, int j, int k, int l, int z){
         phi[z] = phi[i]*phi[j]*phi[k]*phi[l];
-        for (int h = 0; h < 3 ; h++) dphi(z,h) = dphi(i,h)*phi[j]*phi[k]*phi[l]+phi[i]*dphi(j,h)*phi[k]*phi[l]+phi[i]*phi[j]*dphi(k,h)*phi[l]+phi[i]*phi[j]*phi[k]*dphi(l,h);
+        for (int h = 0; h < 3 ; h++) dphi(z,h) = dphi(i,h)*phi[j]*phi[k]*phi[l]
+                                                 +phi[i]*dphi(j,h)*phi[k]*phi[l]
+                                                 +phi[i]*phi[j]*dphi(k,h)*phi[l]
+                                                 +phi[i]*phi[j]*phi[k]*dphi(l,h);
     };
 
     while (no < nSides) {
@@ -59,7 +62,7 @@ void ShapeTetrahedron::Shape(const VecDouble &xi, VecInt &orders, VecDouble &phi
                     case 13: face(0,2,3,13-counter);break;
                 }
             }
-        }else if(no == 14){
+        }else if(no == 14 && orders[no]==2){
             volume(0,1,2,3,14-counter);break;
         }
         no++;

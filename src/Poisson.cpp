@@ -95,8 +95,8 @@ void Poisson::ContributeError(IntPointData &data, VecDouble &u_exact, Matrix &du
         if (e < 0) {if (-1*e>errors[2]) errors[2] = -1*e;}
         else if(e > errors[2]) errors[2] = e;
     }
-    errors[1] = errors[0];
-    double de; std::cout << "\n\nDuDx\n"; duhDx.Print(std::cout); std::cout << "\n\nDu_Exact\n"; du_exact.Print(std::cout);
+    errors[1] = errors[0]; double sum;
+    double de; //std::cout << "\n\nDuDx\n"; duhDx.Print(std::cout); std::cout << "\n\nDu_Exact\n"; du_exact.Print(std::cout);
     for(int i = 0 ; i< duhDx.Rows();i++) for(int j = 0; j <duhDx.Cols(); j++) {
         de = duhDx(i,j) - du_exact(i,j);
         errors[0] += de*de;

@@ -7,7 +7,7 @@
 #include "GeomTetrahedron.h"
 #include "tpanic.h"
 
-GeomTetrahedron::GeomTetrahedron(): fNodeIndices({0,1,2,3,4}),fNeighbours()  {
+GeomTetrahedron::GeomTetrahedron(): fNodeIndices({0,1,2,3}),fNeighbours()  {
 }
 
 GeomTetrahedron::~GeomTetrahedron() {
@@ -67,7 +67,7 @@ int GeomTetrahedron::NodeIndex(int node) {
 }
 
 int GeomTetrahedron::NumNodes() {
-    return(5);
+    return(4);
 
 }
 

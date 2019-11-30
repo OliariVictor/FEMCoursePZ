@@ -17,6 +17,7 @@ using namespace std;
 template<class TGeom>
 GeoElementTemplate<TGeom>::GeoElementTemplate(const VecInt &nodeindices, int materialid, GeoMesh *gmesh, int index) : GeoElement(materialid,gmesh,index), Geom() {
     Geom.SetNodes(nodeindices);
+    MaterialId = materialid;
 }
 
 template<class TGeom>
@@ -80,15 +81,15 @@ void GeoElementTemplate<TGeom>::Jacobian(const Matrix &gradx, Matrix &jac, Matri
     detjac = 0.0;
     int nrows = gradx.Rows();
     int ncols = gradx.Cols();
-    int meshDim   = ncols;
-    int elemDim = nrows;
+    int meshDim = this->GMesh->Dimension();//int meshDim   = ncols;
+    int elemDim = this->Reference->Dimension(); //int elemDim = nrows;
 
     VecDouble v_1(meshDim,0),v_2(meshDim,0);
     VecDouble v_1_til(3,0),v_2_til(3,0);
     double norm_v_1 = 0.;
     double norm_v_1_til = 0.0;
     double norm_v_2_til = 0.0;
-    double v_1_dot_v_2  = 0.0;
+    double v_1_dot_v_2  = 0.0; Matrix res;
 
     switch(elemDim){
         case 0:
@@ -158,7 +159,7 @@ void GeoElementTemplate<TGeom>::Jacobian(const Matrix &gradx, Matrix &jac, Matri
 
             detjac = jac(0,0)*jac(1,1)-jac(1,0)*jac(0,1);
 
-            jacinv(0,0) = +jac(1,1)/detjac;
+            jacinv(0,0) = +jac(1,1)/detjac;// if(v_1)
             jacinv(1,1) = +jac(0,0)/detjac;
             jacinv(0,1) = -jac(0,1)/detjac;
             jacinv(1,0) = -jac(1,0)/detjac;
@@ -170,6 +171,8 @@ void GeoElementTemplate<TGeom>::Jacobian(const Matrix &gradx, Matrix &jac, Matri
                 axes(i,0)  = v_1_til[i];
                 axes(i,1)  = v_2_til[i];
             }
+
+             jacinv.Multiply(axes,res,0); jacinv = res;
             break;
 
         case 3:

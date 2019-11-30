@@ -273,7 +273,7 @@ void VTKGeoMesh::PrintCMeshVTK(CompMesh *cmesh, int dim, const std::string &file
         {
             VecDouble xi(ParamCo.Cols(),0.), xco(3,0.);
             for(int i=0; i< xi.size(); i++) xi[i] = ParamCo(t,i);
-            gel->X(xi, xco);
+            gel->X(xi, xco);xco.resize(3);
             for (auto x:xco) {
                 node << x << " ";
             }
@@ -373,7 +373,7 @@ void VTKGeoMesh::PrintSolVTK(CompMesh *cmesh, PostProcess &defPostProc, const st
         {
             VecDouble xi(ParamCo.Cols(),0.), xco(3,0.);
             for(int i=0; i< xi.size(); i++) xi[i] = ParamCo(t,i);
-            gel->X(xi, xco);
+            gel->X(xi, xco);xco.resize(3);
             for (auto x:xco) {
                 node << x << " ";
             }
@@ -437,7 +437,7 @@ void VTKGeoMesh::PrintSolVTK(CompMesh *cmesh, PostProcess &defPostProc, const st
                 {
                     VecDouble xi(ParamCo.Cols(),0.), xco(3,0.);
                     for(int i=0; i< xi.size(); i++) xi[i] = ParamCo(t,i);
-                    gel->X(xi, xco);
+                    gel->X(xi, xco); xco.resize(3);
                     
                     VecDouble sol(1);
                     TMatrix dsol(2,1);
@@ -485,7 +485,7 @@ void VTKGeoMesh::PrintSolVTK(CompMesh *cmesh, PostProcess &defPostProc, const st
                 {
                     VecDouble xi(ParamCo.Cols(),0.), xco(3,0.);
                     for(int i=0; i< xi.size(); i++) xi[i] = ParamCo(t,i);
-                    gel->X(xi, xco);
+                    gel->X(xi, xco); xco.resize(3);
 
                     VecDouble sol(2);
                     TMatrix dsol(2,1);

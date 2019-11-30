@@ -47,10 +47,28 @@ void laplace2D(const VecDouble &co, VecDouble &result, Matrix &deriv){
     if (co.size() != 2) {std::cout << "force2D: coordinate must have two dimensions"; DebugStop();};
     result[0] = sin(co[0])+cos(co[1]);
     deriv(0,0) = cos(co[0]);
-    deriv(1,0) = sin(co[1]);
+    deriv(1,0) = -sin(co[1]);
 }
 
-GeoMesh *CreateGmeshOrdem1(int nx );
+void force3D(const VecDouble &co, VecDouble &result){
+    result.resize(1); // nstate = 1
+    if (co.size() != 3) {std::cout << "force3D: coordinates must have three dimensions"; DebugStop();};
+    result[0] = sin(co[0])+cos(co[1]) + sin(co[2]);
+}
+
+void laplace3D(const VecDouble &co, VecDouble &result, Matrix &deriv){
+    result.resize(1); // nstate = 1
+    deriv.Resize(3,1);
+    if (co.size() != 3) {std::cout << "force3D: coordinate must have two dimensions"; DebugStop();};
+    result[0] = sin(co[0])+cos(co[1]) + sin(co[2]);
+    deriv(0,0) = cos(co[0]);
+    deriv(1,0) = -sin(co[1]);
+    deriv(2,0) = cos(co[0]);
+}
+
+GeoMesh *CreateGmeshQuad(int nx);
+GeoMesh *CreateGmeshTri(int nx);
+GeoMesh *CreateGmeshTetra(int nx);
 
 int main ()
 {
@@ -283,10 +301,14 @@ IntRule emptyConstructor;
 
     gmesh->BuildConnectivity();*/
 
-    GeoMesh *gmesh = CreateGmeshOrdem1(2);
+    //GeoMesh *gmesh = CreateGmeshQuad(8);
+    //GeoMesh *gmesh = CreateGmeshTri(2);
+
+    //GeoElementTemplate<GeomTetrahedron> geo();
+    GeoMesh *gmesh = CreateGmeshTetra(2);
 
 
-    gmesh->Print(std::cout);
+    gmesh->Print(std::cout); VTKGeoMesh::PrintGMeshVTK(gmesh,"GMESH.vtk");
 
 
     CompMesh *cmesh = new CompMesh(gmesh);
@@ -311,9 +333,8 @@ IntRule emptyConstructor;
         if(matId == poissonId){    //Interior Element
             Poisson *mat = new Poisson(poissonId,perm);
             mat->SetDimension(matDim);
-            mat->SetForceFunction(force2D);
-            mat->SetExactSolution(laplace2D);
-            //mat->NState();
+            if(gmesh->Dimension() == 2) { mat->SetForceFunction(force2D); mat->SetExactSolution(laplace2D);}
+            else {mat->SetForceFunction(force3D); mat->SetExactSolution(laplace3D);}
             cmesh->SetMathStatement(elemInd,mat);
         }
         else{    //Outer Element
@@ -321,8 +342,8 @@ IntRule emptyConstructor;
             Matrix Val1(1,1),Val2(1,1);
             L2Projection *mat = new L2Projection(0,matId,proj,Val1,Val2);
             mat->SetDimension(matDim);
-            mat->SetForceFunction(force2D);
-            mat->SetExactSolution(laplace2D);
+            if(gmesh->Dimension() == 2) {mat->SetForceFunction(force2D); mat->SetExactSolution(laplace2D);}
+            else {mat->SetForceFunction(force3D); mat->SetExactSolution(laplace3D);}
             cmesh->SetMathStatement(elemInd,mat);
         }
     }
@@ -335,7 +356,7 @@ IntRule emptyConstructor;
     VecDouble Sol = cmesh->Solution();
 
     PostProcessTemplate<Poisson> process;
-    process.SetExact(laplace2D);
+    if(gmesh->Dimension() == 2) process.SetExact(laplace2D); else process.SetExact(laplace3D);
     analysis.PostProcessError(std::cout,process);
     /*Matrix nodes(9,9,0);
     nodes(0,0) = 0; nodes(0,1)= 0;
@@ -363,7 +384,7 @@ IntRule emptyConstructor;
     //analysis.PostProcessSolution("SOLUTION.vtk",process);
 }
 
-GeoMesh *CreateGmeshOrdem1(int nx ){
+GeoMesh *CreateGmeshQuad(int nx ){
     GeoMesh *gmesh = new GeoMesh();
     int numNodes = (nx+1)*(nx+1);
     gmesh->SetNumNodes(numNodes);
@@ -423,4 +444,271 @@ GeoMesh *CreateGmeshOrdem1(int nx ){
     return(gmesh);
 }
 
+GeoMesh *CreateGmeshTri(int nx ){
+    GeoMesh *gmesh = new GeoMesh();
+    int numNodes = (nx+1)*(nx+1);
+    gmesh->SetNumNodes(numNodes);
+    int numElem = 2*nx*nx+4*nx;
+    gmesh->SetNumElements(numElem);
+    gmesh->SetDimension(2);
 
+    //Defining node coordinates
+    double h = 1./nx;
+    for(int i =0; i < nx+1;i++) for(int j = 0; j < nx+1; j++) gmesh->Node(i*(nx+1)+j).SetCo({h*j,h*i});
+
+    //Volume Elements
+    VecInt L(3,0),U(3,0);
+    int indL = 0, indU = 1;
+    for(int j = 0; j < nx; j++) for(int i = 0; i < nx ; i++){
+            L[0] =  i + (nx+1)*j;
+            L[1] = L[0] + 1;
+            L[2] = L[0]+(nx+1);
+            GeoElementTemplate<GeomTriangle> *lower = new GeoElementTemplate<GeomTriangle>(L,1,gmesh,indL);
+            gmesh->SetElement(indL,lower);
+            indL+=2;
+
+            U[0] = L[2]+1;
+            U[1] = L[2];
+            U[2] = L[1];
+            GeoElementTemplate<GeomTriangle> *upper = new GeoElementTemplate<GeomTriangle>(U,1,gmesh,indU);
+            gmesh->SetElement(indU,upper);
+            indU+=2;
+        }
+    //Bottom
+    int index = indL;
+    VecInt indicesBC(nx,0);
+    for(int BCind = 0; BCind < nx; BCind++){
+        indicesBC[0] = BCind;
+        indicesBC[1] = BCind+1;
+        GeoElementTemplate<Geom1d> *BC = new GeoElementTemplate<Geom1d>(indicesBC,-1,gmesh,index);
+        gmesh->SetElement(index,BC);
+        index++;
+    }
+    //Right
+    for(int BCind = 0; BCind < nx; BCind++){
+        indicesBC[0] = nx+(nx+1)*BCind;
+        indicesBC[1] = indicesBC[0]+(nx+1);
+        GeoElementTemplate<Geom1d> *BC = new GeoElementTemplate<Geom1d>(indicesBC,-1,gmesh,index);
+        gmesh->SetElement(index,BC);
+        index++;
+    }
+    //TOP
+    for(int BCind = 0; BCind < nx; BCind++){
+        indicesBC[0] = (numNodes-1)-BCind;
+        indicesBC[1] = indicesBC[0]-1;
+        GeoElementTemplate<Geom1d> *BC = new GeoElementTemplate<Geom1d>(indicesBC,-1,gmesh,index);
+        gmesh->SetElement(index,BC);
+        index++;
+    }
+    //Left
+    for(int BCind = 0; BCind < nx; BCind++){
+        indicesBC[0] = numNodes-(nx+1)*(1+BCind);
+        indicesBC[1] = indicesBC[0]-(nx+1);
+        GeoElementTemplate<Geom1d> *BC = new GeoElementTemplate<Geom1d>(indicesBC,-1,gmesh,index);
+        gmesh->SetElement(index,BC);
+        index++;
+    }
+
+    gmesh->BuildConnectivity();
+    return(gmesh);
+}
+
+GeoMesh *CreateGmeshTetra(int nx){
+    GeoMesh *gmesh = new GeoMesh();
+    int numNodes = (nx+1)*(nx+1)*(nx+1);
+    gmesh->SetNumNodes(numNodes);
+    int numElem = 6*nx*nx*nx +6*nx*nx;
+    gmesh->SetNumElements(numElem);
+    gmesh->SetDimension(3);
+
+    //Defining node coordinates
+    double h = 1./nx;
+    for(int k =0; k < nx+1;k++) for(int j = 0; j < nx+1; j++) for(int i = 0; i < nx+1; i++) gmesh->Node(k*(nx+1)*(nx+1)+j*(nx+1)+i).SetCo({h*i,h*j,h*k});
+
+    //Volume Elements
+    VecInt T(4,0);
+
+    int index = 0;
+    int kp = (nx+1)*(nx+1), jp = (nx+1), ip = 1;
+    for(int k =0; k < nx;k++) for(int j = 0; j < nx; j++) for(int i = 0; i < nx ; i++){
+            int comum = k*(nx+1)*(nx+1)+j*(nx+1)+i;
+
+            T[0] = comum+ kp;
+            T[1] = comum;
+            T[2] = comum+ip+kp;
+            T[3] = comum+ip + jp+kp;
+            GeoElementTemplate<GeomTetrahedron> *tet1 = new GeoElementTemplate<GeomTetrahedron>(T,1,gmesh,index);
+            gmesh->SetElement(index,tet1);
+            index++;
+
+            T[0] = comum+kp;
+            T[1] = comum;
+            T[2] = comum+ jp+kp;
+            T[3] = comum+ip+jp+kp;
+            GeoElementTemplate<GeomTetrahedron> *tet2 = new GeoElementTemplate<GeomTetrahedron>(T,1,gmesh,index);
+            gmesh->SetElement(index,tet2);
+            index++;
+
+            T[0] = comum;
+            T[1] = comum+jp;
+            T[2] = comum + jp + kp;
+            T[3] = comum + jp + kp + ip;
+            GeoElementTemplate<GeomTetrahedron> *tet3 = new GeoElementTemplate<GeomTetrahedron>(T,1,gmesh,index);
+            gmesh->SetElement(index,tet3);
+            index++;
+
+            T[0] = comum + ip;
+            T[1] = comum;
+            T[2] = comum +ip + kp;
+            T[3] = comum + ip + kp + jp;
+            GeoElementTemplate<GeomTetrahedron> *tet4 = new GeoElementTemplate<GeomTetrahedron>(T,1,gmesh,index);
+            gmesh->SetElement(index,tet4);
+            index++;
+
+            T[0] = comum + ip + jp;
+            T[1] = comum;
+            T[2] = comum + ip;
+            T[3] = comum + ip + jp + kp;
+            GeoElementTemplate<GeomTetrahedron> *tet5 = new GeoElementTemplate<GeomTetrahedron>(T,1,gmesh,index);
+            gmesh->SetElement(index,tet5);
+            index++;
+
+            T[0] = comum;
+            T[1] = comum + jp;
+            T[2] = comum + jp + ip;
+            T[3] = comum + jp+ip+kp;
+            GeoElementTemplate<GeomTetrahedron> *tet6 = new GeoElementTemplate<GeomTetrahedron>(T,1,gmesh,index);
+            gmesh->SetElement(index,tet6);
+            index++;
+        }
+    //BOUNDARY CONDITION
+    //XY BOTTOM
+    VecInt LBC(3,0),UBC(3,0);
+    for(int j = 0; j < nx; j++) for(int i = 0; i < nx ; i++){
+            int Lcomum = i + (nx+1)*j;
+            int ip = 1, jp = nx+1;
+
+            LBC[0] = Lcomum;
+            LBC[1] = Lcomum + ip;
+            LBC[2] = Lcomum+jp;
+            GeoElementTemplate<GeomTriangle> *lBC = new GeoElementTemplate<GeomTriangle>(LBC,-1,gmesh,index);
+            gmesh->SetElement(index,lBC);
+            index++;
+
+            int Ucomum = Lcomum + ip;
+
+            UBC[0] = Ucomum+jp;
+            UBC[1] = Ucomum;
+            UBC[2] = Ucomum+jp-ip;
+            GeoElementTemplate<GeomTriangle> *uBC = new GeoElementTemplate<GeomTriangle>(UBC,-1,gmesh,index);
+            gmesh->SetElement(index,uBC);
+            index;
+        }
+    //XY TOP
+    for(int j = 0; j < nx; j++) for(int i = 0; i < nx ; i++){
+            int Lcomum = i + (nx+1)*j+nx*(nx+1)*(nx+1);
+            int ip = 1, jp = nx+1;
+
+            LBC[0] = Lcomum;
+            LBC[1] = Lcomum + ip;
+            LBC[2] = Lcomum+jp;
+            GeoElementTemplate<GeomTriangle> *lBC = new GeoElementTemplate<GeomTriangle>(LBC,-1,gmesh,index);
+            gmesh->SetElement(index,lBC);
+            index++;
+
+            int Ucomum = Lcomum + ip;
+
+            UBC[0] = Ucomum+jp;
+            UBC[1] = Ucomum;
+            UBC[2] = Ucomum+jp-ip;
+            GeoElementTemplate<GeomTriangle> *uBC = new GeoElementTemplate<GeomTriangle>(UBC,-1,gmesh,index);
+            gmesh->SetElement(index,uBC);
+            index;
+        }
+    //ZX FRONT
+    for(int k = 0; k < nx; k++) for(int i = 0; i < nx ; i++){
+            int Lcomum = i + (nx+1)*(nx+1)*k;
+            int ip = 1, kp = (nx+1)*(nx+1);
+
+            LBC[0] = Lcomum;
+            LBC[1] = Lcomum + ip;
+            LBC[2] = Lcomum+kp;
+            GeoElementTemplate<GeomTriangle> *lBC = new GeoElementTemplate<GeomTriangle>(LBC,-1,gmesh,index);
+            gmesh->SetElement(index,lBC);
+            index++;
+
+            int Ucomum = Lcomum + ip;
+
+            UBC[0] = Ucomum+kp;
+            UBC[1] = Ucomum;
+            UBC[2] = Ucomum+kp-ip;
+            GeoElementTemplate<GeomTriangle> *uBC = new GeoElementTemplate<GeomTriangle>(UBC,-1,gmesh,index);
+            gmesh->SetElement(index,uBC);
+            index;
+        }
+    //ZX BACK
+    for(int k = 0; k < nx; k++) for(int i = 0; i < nx ; i++){
+            int Lcomum = i + (nx+1)*(nx+1)*k+nx*(nx+1);
+            int ip = 1, kp = (nx+1)*(nx+1);
+
+            LBC[0] = Lcomum;
+            LBC[1] = Lcomum + ip;
+            LBC[2] = Lcomum+kp;
+            GeoElementTemplate<GeomTriangle> *lBC = new GeoElementTemplate<GeomTriangle>(LBC,-1,gmesh,index);
+            gmesh->SetElement(index,lBC);
+            index++;
+
+            int Ucomum = Lcomum + ip;
+
+            UBC[0] = Ucomum+kp;
+            UBC[1] = Ucomum;
+            UBC[2] = Ucomum+kp-ip;
+            GeoElementTemplate<GeomTriangle> *uBC = new GeoElementTemplate<GeomTriangle>(UBC,-1,gmesh,index);
+            gmesh->SetElement(index,uBC);
+            index;
+        }
+    //YZ LEFT
+    for(int k = 0; k < nx; k++) for(int j = 0; j < nx ; j++){
+            int Lcomum =  j*(nx+1)+k*(nx+1)*(nx+1);
+            int jp = (nx+1), kp = (nx+1)*(nx+1);
+
+            LBC[0] = Lcomum;
+            LBC[1] = Lcomum + jp;
+            LBC[2] = Lcomum+kp;
+            GeoElementTemplate<GeomTriangle> *lBC = new GeoElementTemplate<GeomTriangle>(LBC,-1,gmesh,index);
+            gmesh->SetElement(index,lBC);
+            index++;
+
+            int Ucomum = Lcomum + jp;
+
+            UBC[0] = Ucomum+kp;
+            UBC[1] = Ucomum;
+            UBC[2] = Ucomum+kp-jp;
+            GeoElementTemplate<GeomTriangle> *uBC = new GeoElementTemplate<GeomTriangle>(UBC,-1,gmesh,index);
+            gmesh->SetElement(index,uBC);
+            index;
+        }
+    //YZ RIGHT
+    for(int k = 0; k < nx; k++) for(int j = 0; j < nx ; j++){
+            int Lcomum =  j*(nx+1)+k*(nx+1)*(nx+1) +nx*1;
+            int jp = (nx+1), kp = (nx+1)*(nx+1);
+
+            LBC[0] = Lcomum;
+            LBC[1] = Lcomum + jp;
+            LBC[2] = Lcomum+kp;
+            GeoElementTemplate<GeomTriangle> *lBC = new GeoElementTemplate<GeomTriangle>(LBC,-1,gmesh,index);
+            gmesh->SetElement(index,lBC);
+            index++;
+
+            int Ucomum = Lcomum + jp;
+
+            UBC[0] = Ucomum+kp;
+            UBC[1] = Ucomum;
+            UBC[2] = Ucomum+kp-jp;
+            GeoElementTemplate<GeomTriangle> *uBC = new GeoElementTemplate<GeomTriangle>(UBC,-1,gmesh,index);
+            gmesh->SetElement(index,uBC);
+            index;
+        }
+    gmesh->BuildConnectivity();
+    return(gmesh);
+}

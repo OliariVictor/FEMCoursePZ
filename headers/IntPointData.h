@@ -58,7 +58,7 @@ public:
         for (int iphi=0; iphi<phi.size(); iphi++) {
             double phival = phi[iphi];
             for (int istate=0; istate<nstate; istate++) {
-                solution[istate] += phival*coefs[iphi*nstate+istate]; if(iphi ==0) {std::cout << "\n\nksi\n\n";for(int j=0;j<ksi.size();j++) std::cout << ksi[j] <<std::endl;std::cout << "\n\nX\n\n";for(int j=0;j<x.size();j++) std::cout << x[j] <<std::endl; std::cout << "\n\ndphidx\n\n";dphidx.Print();std::cout << "\n\ndphidksi\n\n";dphidksi.Print();std::cout << "\n\ngradX\n\n";gradx.Print();std::cout << "\n\nCoefs\n\n";for(int j=0;j<coefs.size();j++) std::cout << coefs[j] <<std::endl;}
+                solution[istate] += phival*coefs[iphi*nstate+istate]; //if(iphi ==0) {std::cout << "\n\nksi\n\n";for(int j=0;j<ksi.size();j++) std::cout << ksi[j] <<std::endl;std::cout << "\n\nX\n\n";for(int j=0;j<x.size();j++) std::cout << x[j] <<std::endl; std::cout << "\n\ndphidx\n\n";dphidx.Print();std::cout << "\n\ndphidksi\n\n";dphidksi.Print();std::cout << "\n\ngradX\n\n";gradx.Print();std::cout << "\n\nCoefs\n\n";for(int j=0;j<coefs.size();j++) std::cout << coefs[j] <<std::endl;std::cout << "\n\nAxes\n\n";axes.Print();}
                 for (int d=0; d < dim; d++) {
                     dsoldksi(d,istate) += coefs[iphi*nstate+istate]*dphidksi(iphi,d); // (d,iphi) replaced by (iphi,d)
                     dsoldx(d,istate) += coefs[iphi*nstate+istate]*dphidx(iphi,d) ;     // (d,iphi) replaced by (iphi,d)

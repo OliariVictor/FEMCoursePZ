@@ -130,10 +130,10 @@ void CompElement::ComputeRequiredData(IntPointData &data, VecDouble &intpoint) c
 
     ShapeFunctions(intpoint,data.phi,data.dphidksi);
 
-    geoel->GradX(intpoint,data.x,data.gradx); std::cout << "\n\nGradX\n\n"; data.gradx.Print();
+    geoel->GradX(intpoint,data.x,data.gradx); //std::cout << "\n\nGradX\n\n"; data.gradx.Print();
     geoel->X(intpoint,data.x);
     Matrix jacinv(dim,dim,0), jac(dim,dim,0);
-    geoel->Jacobian(data.gradx,jac,data.axes,data.detjac,jacinv); std::cout << "\n\nJacInv\n\n";jacinv.Print();
+    geoel->Jacobian(data.gradx,jac,data.axes,data.detjac,jacinv);// std::cout << "\n\nJacInv\n\n";jacinv.Print();
     //std::cout << "\n\nCompElement::Convert2Axes: Print dphi\n"; data.dphidksi.Print(std::cout); std::cout << "\n\n";
     Convert2Axes(data.dphidksi, jacinv,data.dphidx); //std::cout << "\n\ndphidksi: \n"; data.dphidksi.Print(std::cout);std::cout << "\n\ndphidx: \n"; data.dphidx.Print(std::cout);
 
@@ -201,7 +201,7 @@ void CompElement::EvaluateError(std::function<void(const VecDouble &loc, VecDoub
         //if(this->GetStatement()->GetMatID() != 1) continue;
         intRuleError->Point(i,data.ksi,data.weight);
         ComputeRequiredData(data,data.ksi);
-        GetMultiplyingCoeficients(data.coefs);
+        GetMultiplyingCoeficients(data.coefs);// std::cout << "\n\nElemInd: " << this->GetIndex() << "\n\nksi: "; for(int ind = 0; ind < data.ksi.size(); ind++) std::cout << data.ksi[ind] << ", "; std::cout<<std::endl;
         data.ComputeSolution();
         if(data.detjac < 0) std::cout << "CompElement::EvaluateError: Waring: detjac is not strictly positive";
         weight = data.weight*data.detjac;
