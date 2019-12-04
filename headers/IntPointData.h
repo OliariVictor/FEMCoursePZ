@@ -52,19 +52,19 @@ public:
         for(auto &solval:solution) solval = 0.;
         dsoldksi.Resize(dphidx.Cols(), nstate); // Rows replaced by Cols
         dsoldx.Resize(dphidx.Cols(), nstate);   // Rows replaced by Cols
-        dsoldx.Zero();
+        dsoldx.Zero(); //dsoldx.Print(std::cout);
         dsoldksi.Zero();
-        int dim = dphidx.Cols();                      // Rows replaced by Cols
+        int dim = dphidksi.Cols();//dphidx.Cols();// Matrix T; if (ksi.size() == 1) dphidksi.Transpose(T);dphidksi = T;                     // Rows replaced by Cols
         for (int iphi=0; iphi<phi.size(); iphi++) {
             double phival = phi[iphi];
             for (int istate=0; istate<nstate; istate++) {
-                solution[istate] += phival*coefs[iphi*nstate+istate]; //if(iphi ==0) {std::cout << "\n\nksi\n\n";for(int j=0;j<ksi.size();j++) std::cout << ksi[j] <<std::endl;std::cout << "\n\nX\n\n";for(int j=0;j<x.size();j++) std::cout << x[j] <<std::endl; std::cout << "\n\ndphidx\n\n";dphidx.Print();std::cout << "\n\ndphidksi\n\n";dphidksi.Print();std::cout << "\n\ngradX\n\n";gradx.Print();std::cout << "\n\nCoefs\n\n";for(int j=0;j<coefs.size();j++) std::cout << coefs[j] <<std::endl;std::cout << "\n\nAxes\n\n";axes.Print();}
+                solution[istate] += phival*coefs[iphi*nstate+istate]; //if(iphi ==0) {/*std::cout << "\n\nksi\n\n";for(int j=0;j<ksi.size();j++) std::cout << ksi[j] <<std::endl;std::cout << "\n\nX\n\n";for(int j=0;j<x.size();j++) std::cout << x[j] <<std::endl; std::cout << "\n\ndphidx\n\n";dphidx.Print();*/}//std::cout << "\n\ndphidksi\n\n";dphidksi.Print();std::cout << "\n\ngradX\n\n";gradx.Print();/*std::cout << "\n\nCoefs\n\n";for(int j=0;j<coefs.size();j++) std::cout << coefs[j] <<std::endl;std::cout << "\n\nAxes\n\n";axes.Print();*/}
                 for (int d=0; d < dim; d++) {
                     dsoldksi(d,istate) += coefs[iphi*nstate+istate]*dphidksi(iphi,d); // (d,iphi) replaced by (iphi,d)
-                    dsoldx(d,istate) += coefs[iphi*nstate+istate]*dphidx(iphi,d) ;     // (d,iphi) replaced by (iphi,d)
+                    dsoldx(d,istate) += coefs[iphi*nstate+istate]*dphidx(iphi,d) ;  //dsoldx.Print(std::cout);   // (d,iphi) replaced by (iphi,d)
                 }
             }
-        } std::cout << "\n\ndsoldx\n"; dsoldx.Print(std::cout);
+        } //std::cout << "\n\ndsoldx\n"; dsoldx.Print(std::cout);
     }
     
 };

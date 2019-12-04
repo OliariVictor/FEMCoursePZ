@@ -22,23 +22,23 @@ void ShapeTetrahedron::Shape(const VecDouble &xi, VecInt &orders, VecDouble &phi
 
     auto edge = [&](int i, int j, int z) {
         phi[z] = phi[i]*phi[j];
-        for (int k = 0; k < 3; k++) dphi(z,k) = dphi(i,k)*phi[j] + phi[i]*dphi(j,k);
+        for (int k = 0; k < 3; k++) dphi(z,k) = (dphi(i,k)*phi[j] + phi[i]*dphi(j,k));
     };
 
     auto face = [&](int i, int j, int k, int z){
-        phi[z] = phi[i]*phi[j]*phi[k];
-        for (int l = 0; l <3; l++) dphi(z,l) = dphi(i,l)*phi[j]*phi[k]+ phi[i]*dphi(j,l)*phi[k] + phi[i]*phi[j]*dphi(k,l);
+        phi[z] = 27*phi[i]*phi[j]*phi[k];
+        for (int l = 0; l <3; l++) dphi(z,l) = 27*(dphi(i,l)*phi[j]*phi[k]+ phi[i]*dphi(j,l)*phi[k] + phi[i]*phi[j]*dphi(k,l));
     };
 
     auto volume = [&](int i, int j, int k, int l, int z){
-        phi[z] = phi[i]*phi[j]*phi[k]*phi[l];
-        for (int h = 0; h < 3 ; h++) dphi(z,h) = dphi(i,h)*phi[j]*phi[k]*phi[l]
+        phi[z] = 54*phi[i]*phi[j]*phi[k]*phi[l];
+        for (int h = 0; h < 3 ; h++) dphi(z,h) = 54*(dphi(i,h)*phi[j]*phi[k]*phi[l]
                                                  +phi[i]*dphi(j,h)*phi[k]*phi[l]
                                                  +phi[i]*phi[j]*dphi(k,h)*phi[l]
-                                                 +phi[i]*phi[j]*phi[k]*dphi(l,h);
+                                                 +phi[i]*phi[j]*phi[k]*dphi(l,h));
     };
 
-    while (no < nSides) {
+    while (no < size/*nSides*/) {
         if (orders[no] != 1 && orders[no] != 2) { std::cout << "Requested order not defined in this scope";DebugStop();}
         if(no < 10){
             if (orders[no] == 1) counter++;
@@ -83,13 +83,15 @@ int ShapeTetrahedron::NShapeFunctions(int side, int order) {
         case 7:
         case 8:
         case 9:
+            if(order == 2) return(1);
+            else return (0);
         case 10:
         case 11:
         case 12:
         case 13:
         case 14:
-            if(order == 2) return(1);
-            else return (0);
+            /*if(order == 2) return(1);
+            else*/ return (0);
         default:
             std::cout << "side out of bounds"; DebugStop();
     }

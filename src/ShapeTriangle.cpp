@@ -33,13 +33,13 @@ void ShapeTriangle::Shape(const VecDouble &xi, VecInt &orders, VecDouble &phi, M
                     case 5: edge(2,0,5-counter);break;
                 }
             } else {std::cout << "Please choose a valid shape order"; DebugStop;}
-        }else if (no == 6){
+        }/*else if (no == 6){
             if (orders[no] == 2){
                 phi[6-counter] = phi[0]*phi[1]*phi[2];
                 dphi(6-counter,0) = dphi(0,0)*phi[1]*phi[2]+phi[0]*dphi(1,0)*phi[2]+phi[0]*phi[1]*dphi(2,0);
                 dphi(6-counter,1) = dphi(0,1)*phi[1]*phi[2]+phi[0]*dphi(1,1)*phi[2]+phi[0]*phi[1]*dphi(2,1);
             }
-        }
+        }*/
         no++;
     }
 }
@@ -54,9 +54,10 @@ int ShapeTriangle::NShapeFunctions(int side, int order) {
         case 3:
         case 4:
         case 5:
-        case 6:
             if(order == 2) return(1);
             else return (0);
+        case 6:
+            return (0);
         default:
             std::cout << "side out of bounds"; DebugStop();
     }

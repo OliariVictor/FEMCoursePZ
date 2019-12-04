@@ -120,7 +120,7 @@ void Assemble::Compute(Matrix &globmat, Matrix &rhs) {
     for(int64_t celIndex = 0; celIndex < ncel ; celIndex ++){
         CompElement *cel = cmesh->GetElement(celIndex);
         Matrix EK(0,0),EF(0,0);
-        cel->CalcStiff(EK,EF); std::cout << "\nElem :" << celIndex << "\nEK: \n"; EK.Print(std::cout);std::cout << "\n\nEF: \n"; EF.Print(std::cout); std::cout <<std::endl;
+        cel->CalcStiff(EK,EF); //std::cout << "\nElem :" << celIndex << "\nEK: \n"; EK.Print(std::cout);std::cout << "\n\nEF: \n"; EF.Print(std::cout); std::cout <<std::endl;
 
 
         int ndof = cel->NDOF();

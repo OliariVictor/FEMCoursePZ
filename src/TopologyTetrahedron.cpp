@@ -22,7 +22,7 @@ int TopologyTetrahedron::SideNodeIndex(int side, int node) {
     else if(side <4 && node == 0) return(side);
     else if(side <4) DebugStop();
     else if(side <6 && node <2)return((side+node)%4);
-    else if(side ==6 && node <2)return((side+2*node)%4);
+    else if(side ==6 && node <2) return((side+2*node)%4);
     else if(side <10 && node ==0)return(side-7);
     else if(side <10 && node ==1)return(3);
     else if(side <10) DebugStop();

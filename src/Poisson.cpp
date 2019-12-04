@@ -82,7 +82,7 @@ int Poisson::NSolutionVariables(const PostProcVar var) {
 void Poisson::ContributeError(IntPointData &data, VecDouble &u_exact, Matrix &du_exact, VecDouble &errors) const {
     VecDouble uh; PostProcessSolution(data,ESol,uh);
     Matrix duhDx = data.dsoldx;// PostProcessSolution(data,EDSol,duhDx);
-    errors.resize(3);
+    errors.resize(3);// std::cout << "duhdx" :
 
     for(int i=0; i <errors.size();i++) errors[i] = 0;
 
@@ -96,7 +96,7 @@ void Poisson::ContributeError(IntPointData &data, VecDouble &u_exact, Matrix &du
         else if(e > errors[2]) errors[2] = e;
     }
     errors[1] = errors[0]; double sum;
-    double de; //std::cout << "\n\nDuDx\n"; duhDx.Print(std::cout); std::cout << "\n\nDu_Exact\n"; du_exact.Print(std::cout);
+    double de; std::cout << "\n\nDuDx\n"; duhDx.Print(std::cout); std::cout << "\n\nDu_Exact\n"; du_exact.Print(std::cout);
     for(int i = 0 ; i< duhDx.Rows();i++) for(int j = 0; j <duhDx.Cols(); j++) {
         de = duhDx(i,j) - du_exact(i,j);
         errors[0] += de*de;
@@ -107,15 +107,15 @@ void Poisson::Contribute(IntPointData &data, double weight, Matrix &EK, Matrix &
     //Poisson's problem requires no K coefficent and no Permeability Matrix
     VecDouble ksi = data.ksi;
     VecDouble X = data.x;
-    int size = data.phi.size();
+    int size = data.phi.size();int meshDim = data.x.size();
     //std::cout << "\ndphidx:\n";
     //data.dphidx.Print(std::cout);
-    VecDouble f(NState(),0);
+    VecDouble f(NState(),0); //std::cout<<"\n\ndphidx";data.dphidx.Print(std::cout);
     for(int i =0; i< size;i++){
         forceFunction(X,f);
         for(int k = 0; k <NState();k++) {EF(i,0) += weight*(f[k]*data.phi[i]);}   //std::cout<<"\nf[k] = "<<f[k]<<"\nphi[i] =" << data.phi[i]<< "\n\nDetJac: "<< data.detjac<<  std::endl;}//Loop is necessary to taken into account multiple state variables.
         for(int j =0; j < size; j++){
-            EK(i,j) += weight*(data.dphidx(i,0)*data.dphidx(j,0)+data.dphidx(i,1)*data.dphidx(j,1));
+                for(int ind = 0; ind < meshDim ; ind++)  EK(i,j) += weight*(data.dphidx(i,ind)*data.dphidx(j,ind));     //EK(i,j) += weight*(data.dphidx(i,0)*data.dphidx(j,0)+data.dphidx(i,1)*data.dphidx(j,1));
         }
     }
 }

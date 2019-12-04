@@ -165,7 +165,7 @@ int CompElementTemplate<Shape>::NDOF() const {
 template<class Shape>
 int CompElementTemplate<Shape>::NShapeFunctions(int doflocindex) const {
    int globalInd =  dofindexes[doflocindex];
-   GetCompMesh()->GetDOF(globalInd).GetNShape();
+   return(GetCompMesh()->GetDOF(globalInd).GetNShape());
 }
 
 template<class Shape>

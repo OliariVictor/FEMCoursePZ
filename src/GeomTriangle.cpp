@@ -46,7 +46,7 @@ void GeomTriangle::GradX(const VecDouble &xi, Matrix &NodeCo, VecDouble &x, Matr
     VecDouble fphi(3,0); Matrix fdphi(3,2,0);
     Shape(xi,fphi,fdphi);
 
-    int dim = NodeCo.Cols(); std::cout << "\n\nTriangle Node coordinate:\n";NodeCo.Print(); std::cout << "\n\nfdphi\n";fdphi.Print();
+    int dim = NodeCo.Cols(); //std::cout << "\n\nTriangle Node coordinate:\n";NodeCo.Print(); std::cout << "\n\nfdphi\n";fdphi.Print();
     gradx.Resize(dim,2);
     for(int i =0 ; i < dim ; i++) for(int j =0; j<2 ; j++) gradx(i,j) = 0;
 

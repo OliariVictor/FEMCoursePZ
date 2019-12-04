@@ -44,13 +44,13 @@ void GeomTetrahedron::X(const VecDouble &xi, Matrix &NodeCo, VecDouble &x) {
 
 void GeomTetrahedron::GradX(const VecDouble &xi, Matrix &NodeCo, VecDouble &x, Matrix &gradx) {
     VecDouble fphi(4,0); Matrix fdphi(4,3,0);
-    Shape(xi,fphi,fdphi);
+    Shape(xi,fphi,fdphi); //std::cout <<"\n\nNodeCo: \n";NodeCo.Print(std::cout); std::cout <<"\n\nfdphi \n";fdphi.Print(std::cout);
     for (int i =0; i<3; i++) for(int j =0; j<3 ; j++) gradx(i,j) = 0;
     for(int i = 0; i < 3; i++) for(int j =0 ; j < 4;j++) {
             gradx(0,i) += NodeCo(j,0)*fdphi(j,i);
             gradx(1,i) += NodeCo(j,1)*fdphi(j,i);
             gradx(2,i) += NodeCo(j,2)*fdphi(j,i);
-        }
+        } //std::cout <<"\n\nGradX: \n";gradx.Print(std::cout);
 }
 
 

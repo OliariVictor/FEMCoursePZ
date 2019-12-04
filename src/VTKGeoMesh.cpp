@@ -430,7 +430,7 @@ void VTKGeoMesh::PrintSolVTK(CompMesh *cmesh, PostProcess &defPostProc, const st
                 
                 gel = cel->GetGeoElement();
                 
-                TMatrix ParamCo = NodeCoordinates(gel->Type());
+                TMatrix ParamCo = NodeCoordinates(gel->Type()); ParamCo.Print(std::cout);
                 int elNnodes = ParamCo.Rows();
                 
                 for(int t = 0; t < elNnodes; t++)

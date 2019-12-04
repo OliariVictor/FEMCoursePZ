@@ -52,14 +52,14 @@ CompMesh *Analysis::Mesh() const {
 void Analysis::RunSimulation() {
     Matrix K,F;
     Assemble ass(cmesh);
-    ass.Compute(K,F); std::cout << "\nGlobK: \n"; K.Print(std::cout);std::cout << "\n\nGlobF: \n";F.Print(std::cout);
+    ass.Compute(K,F); //std::cout << "\nGlobK: \n"; K.Print(std::cout);std::cout << "\n\nGlobF: \n";F.Print(std::cout);
 
     GlobalSystem = K;
     RightHandSide = F;
 
     K.Solve_LU(F);
 
-    Solution = F; std::cout << "\n\nComputedSol\n\n"; F.Print(std::cout);
+    Solution = F; //std::cout << "\n\nComputedSol\n\n"; F.Print(std::cout);
     VecDouble sol(F.Rows(),0); for(int i =0; i< F.Rows() ; i++) sol[i] = F(i,0);
     cmesh->LoadSolution(sol);
 }
@@ -76,7 +76,7 @@ VecDouble Analysis::PostProcessError(std::ostream &out, PostProcess &defPostProc
 
     for(int64_t elemInd = 0; elemInd < numElem; elemInd++){
         CompElement *cel = cmesh->GetElement(elemInd);  if(cel->GetStatement()->GetMatID() != 1) continue;
-        cel->EvaluateError(defPostProc.GetExact(),val); std::cout << "\n\ncel : " << cel->GetIndex();
+        cel->EvaluateError(defPostProc.GetExact(),val); //std::cout << "\n\ncel : " << cel->GetIndex();
         for(int i =0; i < 2 ; i++){
             errors[i] += val[i]*val[i];
         }

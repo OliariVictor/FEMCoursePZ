@@ -124,6 +124,7 @@ void GeoElementTemplate<TGeom>::Jacobian(const Matrix &gradx, Matrix &jac, Matri
             for(int i=0; i < meshDim; i++) {
                 axes(i,0) = v_1[i]/norm_v_1;
             }
+            axes.Multiply(jacinv,res,0); jacinv = res;
             break;
 
         case 2:
@@ -171,9 +172,9 @@ void GeoElementTemplate<TGeom>::Jacobian(const Matrix &gradx, Matrix &jac, Matri
                 axes(i,0)  = v_1_til[i];
                 axes(i,1)  = v_2_til[i];
             }
-
-             jacinv.Multiply(axes,res,0); jacinv = res;
-            break;
+            axes.Multiply(jacinv,res,0); jacinv = res;
+             //jacinv.Multiply(axes,res,0); jacinv = res;
+            break;jacinv = res;
 
         case 3:
             jac.Resize(3,3);
@@ -187,7 +188,7 @@ void GeoElementTemplate<TGeom>::Jacobian(const Matrix &gradx, Matrix &jac, Matri
             detjac -= jac(0,0)*jac(1,2)*jac(2,1);//- a00 a12 a21
             detjac -= jac(0,1)*jac(1,0)*jac(2,2);//- a01 a10 a22
             detjac += jac(0,0)*jac(1,1)*jac(2,2);//+ a00 a11 a22
-
+            //std::cout << "\n\nJacobian: \n";jac.Print(std::cout);
             if(detjac == 0){
                 cout << "Singular Jacobian, determinant of jacobian = " << detjac << std::endl; DebugStop();
             }
@@ -201,9 +202,10 @@ void GeoElementTemplate<TGeom>::Jacobian(const Matrix &gradx, Matrix &jac, Matri
             jacinv(2,0) = (-jac(1,1)*jac(2,0)+jac(1,0)*jac(2,1))/detjac;//-a11 a20 + a10 a21
             jacinv(2,1) = ( jac(0,1)*jac(2,0)-jac(0,0)*jac(2,1))/detjac;//a01 a20 - a00 a21
             jacinv(2,2) = (-jac(0,1)*jac(1,0)+jac(0,0)*jac(1,1))/detjac;//-a01 a10 + a00 a11
-
+            //std::cout <<"\n\nJacobianInv: \n";jacinv.Print(std::cout);
             for(int i =0; i<3; i++) for(int j = 0; j<3;j++) axes(i,j) = 0;
             axes(0,0) = axes(1,1) = axes(2,2) = 1;
+            jacinv.Transpose(res);jacinv = res; //std::cout <<"\n\nJacobianInvTransposed: \n";jacinv.Print(std::cout);
             break;
 
         default:

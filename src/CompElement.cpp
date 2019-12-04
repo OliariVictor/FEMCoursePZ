@@ -133,7 +133,7 @@ void CompElement::ComputeRequiredData(IntPointData &data, VecDouble &intpoint) c
     geoel->GradX(intpoint,data.x,data.gradx); //std::cout << "\n\nGradX\n\n"; data.gradx.Print();
     geoel->X(intpoint,data.x);
     Matrix jacinv(dim,dim,0), jac(dim,dim,0);
-    geoel->Jacobian(data.gradx,jac,data.axes,data.detjac,jacinv);// std::cout << "\n\nJacInv\n\n";jacinv.Print();
+    geoel->Jacobian(data.gradx,jac,data.axes,data.detjac,jacinv); //std::cout << "\n\nJacInv\n\n";jacinv.Print();
     //std::cout << "\n\nCompElement::Convert2Axes: Print dphi\n"; data.dphidksi.Print(std::cout); std::cout << "\n\n";
     Convert2Axes(data.dphidksi, jacinv,data.dphidx); //std::cout << "\n\ndphidksi: \n"; data.dphidksi.Print(std::cout);std::cout << "\n\ndphidx: \n"; data.dphidx.Print(std::cout);
 
@@ -143,11 +143,12 @@ void CompElement::ComputeRequiredData(IntPointData &data, VecDouble &intpoint) c
 
 void CompElement::Convert2Axes(const Matrix &dphi, const Matrix &jacinv, Matrix &dphidx) const {
     //Convert parameter shape derivative into x,y,z coordinates shape derivative;
-    int dim = dphi.Cols(); dphidx.Zero();
+    int dim = dphi.Cols(); dphidx.Zero(); int meshDim = this->GetCompMesh()->GetGeoMesh()->Dimension();//Matrix jacinvT;jacinv.Transpose(jacinvT);
     for (int i = 0; i < dphi.Rows(); i++) {
-        for (int j = 0; j < dim; j++) {
+        for (int j = 0; j < meshDim; j++) {
             for (int k = 0; k < dim; k++) {
                 dphidx(i, j) += dphi.GetVal(i, k) * jacinv.GetVal(j, k);
+                //dphidx(i, j) += dphi.GetVal(i, k) * jacinv.GetVal(j, k);
             }
         }
     }
@@ -201,7 +202,7 @@ void CompElement::EvaluateError(std::function<void(const VecDouble &loc, VecDoub
         //if(this->GetStatement()->GetMatID() != 1) continue;
         intRuleError->Point(i,data.ksi,data.weight);
         ComputeRequiredData(data,data.ksi);
-        GetMultiplyingCoeficients(data.coefs);// std::cout << "\n\nElemInd: " << this->GetIndex() << "\n\nksi: "; for(int ind = 0; ind < data.ksi.size(); ind++) std::cout << data.ksi[ind] << ", "; std::cout<<std::endl;
+        GetMultiplyingCoeficients(data.coefs); //std::cout << "\n\nElemInd: " << this->GetIndex() << "\n\nksi: "; for(int ind = 0; ind < data.ksi.size(); ind++) std::cout << data.ksi[ind] << ", "; std::cout<<std::endl;
         data.ComputeSolution();
         if(data.detjac < 0) std::cout << "CompElement::EvaluateError: Waring: detjac is not strictly positive";
         weight = data.weight*data.detjac;
