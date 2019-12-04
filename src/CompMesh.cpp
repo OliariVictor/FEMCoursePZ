@@ -140,11 +140,17 @@ void CompMesh::LoadSolution(std::vector<double> &Sol) {
 void CompMesh::Print(std::ostream & out) {
     out << "\n\t\tCOMPUTABLE GRID INFORMATIONS:\n\n";
     int numConnect;
+    int numDOFtotal = GetNumberDOF();
+    int numDOFp2 = 0;
+    for (int64_t dofInd =0; dofInd < numDOFtotal; dofInd++){
+        DOF dof = this->GetDOF(dofInd);
+        numDOFp2 += dof.GetNShape()*dof.GetNState();
+    }
     if(DefaultOrder ==1){
-        numConnect = GetGeoMesh()->NumNodes(); out << "number of connects            = " << numConnect << " (" << GetNumberDOF() << ")" << std::endl;
+        numConnect = GetGeoMesh()->NumNodes(); out << "number of connects            = " << numConnect  << std::endl;
     }
     else {
-        numConnect = GetNumberDOF(); out << "number of connects            = " << numConnect << std::endl;
+        numConnect = numDOFp2; out << "number of connects            = " << numConnect << std::endl;
     }
 
     out << "number of elements            = " << this->GetElementVec().size() << std::endl;

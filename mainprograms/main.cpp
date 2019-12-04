@@ -143,7 +143,7 @@ int main ()
 
     //GeoMesh *gmesh = CreateGmeshQuad(1);
     //GeoMesh *gmesh = CreateGmeshTri(8);
-    GeoMesh *gmesh = CreateGmeshTetra(1);
+    GeoMesh *gmesh = CreateGmeshTetra(8);
 
     //gmesh->Print(std::cout);
     std::cout << "\ngeometric mesh executed\n";
@@ -170,21 +170,13 @@ int main ()
         if(matId == poissonId){    //Interior Element
             Poisson *mat = new Poisson(poissonId,perm);
             mat->SetDimension(matDim);
-            //if(gmesh->Dimension() ==3) {mat->SetForceFunction(force3D); mat->SetExactSolution(laplace3D);}
-            //if(gmesh->Dimension() ==3) {mat->SetForceFunction(force3D); mat->SetExactSolution(laplace3D);}
-            //if(gmesh->Dimension() == 2) { mat->SetForceFunction(force2D); mat->SetExactSolution(laplace2D);}
-            //else {mat->SetForceFunction(force3D); mat->SetExactSolution(laplace3D);}
             setFuncPoisson(gmesh->Dimension(),solType,mat);
             cmesh->SetMathStatement(elemInd,mat);
         }
         else{    //Outer Element
-            //L2Projection(int bctype, int materialid, Matrix &proj, Matrix Val1, Matrix Val2);
             Matrix Val1(1,1),Val2(1,1);
             L2Projection *mat = new L2Projection(0,matId,proj,Val1,Val2);
             mat->SetDimension(matDim);
-            //if(gmesh->Dimension() ==3) {mat->SetForceFunction(force3D); mat->SetExactSolution(laplace3D);}
-            //if(gmesh->Dimension() == 2) {mat->SetForceFunction(force2D); mat->SetExactSolution(laplace2D);}
-            //else {mat->SetForceFunction(force3D); mat->SetExactSolution(laplace3D);}
             setFuncL2(gmesh->Dimension(),solType,mat);
             cmesh->SetMathStatement(elemInd,mat);
         }
@@ -192,7 +184,7 @@ int main ()
     cmesh->SetDefaultOrder(pOrder);
     cmesh->AutoBuild();
     std::cout << "\nComputational mesh executed\n";
-    //cmesh->Print(std::cout);
+    cmesh->Print(std::cout);
 
     Analysis analysis(cmesh);
     analysis.RunSimulation();
@@ -201,7 +193,6 @@ int main ()
 
     PostProcessTemplate<Poisson> process;
     setFuncPostProcess(gmesh->Dimension(),solType,&process);
-    //if(gmesh->Dimension() == 2) process.SetExact(laplace2D); else process.SetExact(laplace3D);
     analysis.PostProcessError(std::cout,process);
     std::cout << "\nPostProcessError Executed\n";
 
